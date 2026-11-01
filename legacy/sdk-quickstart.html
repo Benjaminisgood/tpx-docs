@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="从研究者自己的 normalized CSV 出发，逐步理解 tpxtpxtpx 的 DataFrame、Curve、IntegrationResult 与 PeakResult，并核对形状、单位和人工判断点。"
+    >
+    <meta name="theme-color" content="#f7f8f4">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Python SDK 快速入门 — tpxtpxtpx">
+    <meta
+      property="og:description"
+      content="一张真实数据表、一个显式 Curve、两个彼此独立的结果对象。"
+    >
+    <title>Python SDK 快速入门 — tpxtpxtpx</title>
+    <link rel="stylesheet" href="site.css">
+  </head>
+  <body class="tutorial-page analysis-page sdk-quickstart-page">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="index.html" aria-label="tpxtpxtpx 首页">tpxtpxtpx</a>
+        <nav aria-label="主导航">
+          <a href="index.html">首页</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="commands.html">命令地图</a>
+          <a href="sdk-quickstart.html" aria-current="page">SDK 入门</a>
+          <a href="evidence.html">运行证据</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="tutorial-hero shell" aria-labelledby="sdk-quickstart-title">
+        <div class="measure tutorial-measure" aria-hidden="true">
+          <span>DataFrame</span>
+          <span>Curve</span>
+          <span>shape</span>
+          <span>unit</span>
+          <span>Result</span>
+        </div>
+
+        <div class="tutorial-hero-copy">
+          <p class="analysis-eyebrow">PUBLIC SDK · REAL INPUT · EXPLICIT PARAMETERS</p>
+          <h1 id="sdk-quickstart-title"><span class="tutorial-title-lead">从 DataFrame 到</span> <span class="tutorial-title-tail">科学结果对象</span></h1>
+          <p>
+            用研究者自己的 <code>NORMALIZED.csv</code> 走完一个最小 Python 调用：先把三列映射成 <code>Curve</code>，再分别积分和寻找候选峰。脚本不会读取隐藏配置、修改输入或自动串成流水线。
+          </p>
+          <div class="hero-actions" role="group" aria-label="SDK 快速入门入口">
+            <a class="button button-primary" href="#input-contract">先看形状与单位</a>
+            <a class="button button-secondary" href="reference.html#sdk">查看 SDK 参考边界</a>
+          </div>
+        </div>
+
+        <ul class="tutorial-outcomes" aria-label="本页学习结果">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M6 8h12M6 12h12M6 16h12"></path>
+            </svg>
+            <span>看懂输入列与数组形状</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m7 14 3-4 3 2 4-5"></path>
+            </svg>
+            <span>沿时间轴得到积分量</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M6 16c2 0 2-7 6-7s4 7 6 7"></path>
+            </svg>
+            <span>把峰保留为候选结果</span>
+          </li>
+        </ul>
+      </section>
+
+      <nav class="step-index" aria-label="本页步骤">
+        <ol class="shell">
+          <li><a href="#input-contract"><span>00</span>输入契约</a></li>
+          <li><a href="#step-1"><span>01</span>运行脚本</a></li>
+          <li><a href="#step-2"><span>02</span>解释积分</a></li>
+          <li><a href="#step-3"><span>03</span>解释候选峰</a></li>
+        </ol>
+      </nav>
+
+      <section class="tutorial-prep shell" id="input-contract" aria-labelledby="input-contract-title">
+        <div class="tutorial-section-offset">
+          <header class="tutorial-section-heading">
+            <h2 id="input-contract-title">先明确：表格有行和列，曲线只有一维轴</h2>
+            <p>
+              <code>curve_from_response_table()</code> 不按列位置猜测含义。它只消费三个点名的数值列，并把单位写进新的只读 <code>Curve</code>。
+            </p>
+          </header>
+
+          <div class="analysis-question-map" role="group" aria-label="DataFrame 到两个结果对象的数据流">
+            <div class="analysis-source">
+              <span>真实输入</span>
+              <strong>DataFrame · (N, M)</strong>
+              <p>N 行采样点，M 列已处理数据。</p>
+            </div>
+            <ol>
+              <li><span>01</span><strong>显式映射</strong><code>Curve · 3 × (N,)</code></li>
+              <li><span>02</span><strong>独立积分</strong><code>IntegrationResult</code></li>
+              <li><span>03</span><strong>独立找峰</strong><code>PeakResult</code></li>
+            </ol>
+          </div>
+
+          <div class="prep-grid analysis-input-grid">
+            <div class="input-spec">
+              <h3>默认读取的三列</h3>
+              <p>响应列和响应单位仍由调用者显式给出。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="SDK 快速入门输入列">
+                <table>
+                  <thead>
+                    <tr><th scope="col">DataFrame 列</th><th scope="col">单位</th><th scope="col">Curve 字段</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>program_time_min</code></td><td>min</td><td><code>x · (N,)</code></td></tr>
+                    <tr><td><code>response_umol_min</code></td><td>µmol min<sup>−1</sup></td><td><code>y · (N,)</code></td></tr>
+                    <tr><td><code>temperature_fit_c</code></td><td>°C</td><td><code>coordinates["temperature"] · (N,)</code></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="spec-note">DataFrame 的 index 和其他列不会进入这个 <code>Curve</code>；需要它们时应在原表中单独保留和复核。</p>
+            </div>
+
+            <div class="input-spec">
+              <h3>进入 Curve 前的硬约束</h3>
+              <p>每条轴都必须代表同一批采样点。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="Curve 数组约束">
+                <table>
+                  <thead>
+                    <tr><th scope="col">检查</th><th scope="col">真实约束</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>维度</td><td>三个数组都必须是一维</td></tr>
+                    <tr><td>长度</td><td>长度相等，且 <code>N ≥ 2</code></td></tr>
+                    <tr><td>数值</td><td>全部有限；缺失值不会填成 0</td></tr>
+                    <tr><td>积分时间</td><td><code>x</code> 必须严格递增</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <aside class="science-note">
+            <strong>单位不靠猜</strong>
+            <p>
+              SDK 固定把默认时间列标为 <code>min</code>、温度辅助轴标为 <code>degC</code>，但响应单位来自 <code>response_unit</code>。如果换响应列，必须同时传入与数值一致的响应单位。
+            </p>
+          </aside>
+
+          <details class="call-path">
+            <summary>这一步实际调用什么？</summary>
+            <p><code>pandas.read_csv → curve_from_response_table → Curve.from_frame → Curve</code></p>
+            <p>构造函数复制三条数值数组、检查形状和有限性，再设为只读；它不改写原 DataFrame。</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="step-1" aria-labelledby="run-script-title">
+        <div class="step-marker" aria-hidden="true"><span>01</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>01</span>
+            <div>
+              <h2 id="run-script-title">运行一个只读、逐项询问的脚本</h2>
+              <p>在项目环境中先确认公共包可导入，再把下面脚本保存为 <code>sdk_quickstart.py</code>。温区、峰间距、平滑与阈值由交互输入；其余策略在代码中显式写出，运行前仍须逐项复核或修改。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="code-window command-window" aria-labelledby="environment-check-title">
+                <figcaption class="terminal-bar" id="environment-check-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  最小环境检查
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> python -c "import pandas, tpx; print(tpx.__version__)"
+<span class="prompt">$</span> python sdk_quickstart.py</code></pre>
+              </figure>
+
+              <figure class="code-window command-window" aria-labelledby="sdk-script-title">
+                <figcaption class="terminal-bar" id="sdk-script-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  sdk_quickstart.py · 读取自己的 NORMALIZED.csv
+                </figcaption>
+                <pre tabindex="0"><code><span class="keyword">from</span> pathlib <span class="keyword">import</span> Path
+
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="keyword">from</span> tpx <span class="keyword">import</span> (
+    BaselineSpec,
+    IntegrationSpec,
+    Interval,
+    PeakSpec,
+    curve_from_response_table,
+    detect_peaks,
+    integrate_curve,
+)
+
+csv_path = Path(input("NORMALIZED.csv 路径：").strip()).expanduser()
+sample_name = input("样品名称：").strip()
+analysis_start_c = float(input("人工复核的分析温区起点 (°C)："))
+analysis_end_c = float(input("人工复核的分析温区终点 (°C)："))
+baseline_start_c = float(input("人工复核的基线温区起点 (°C)："))
+baseline_end_c = float(input("人工复核的基线温区终点 (°C)："))
+minimum_separation_c = float(input("最小候选峰间距 (°C)："))
+smoothing_window_c = float(input("平滑窗口全宽 (°C，0 表示不平滑)："))
+minimum_height_text = input(
+    "最小峰高 (µmol min^-1，留空表示不设阈值)："
+).strip()
+
+frame = pd.read_csv(csv_path)
+curve = curve_from_response_table(
+    frame,
+    response_column="response_umol_min",
+    response_unit="umol min^-1",
+    sample_name=sample_name,
+)
+
+analysis_interval = Interval(
+    analysis_start_c,
+    analysis_end_c,
+    axis="temperature",
+    unit="degC",
+)
+baseline_interval = Interval(
+    baseline_start_c,
+    baseline_end_c,
+    axis="temperature",
+    unit="degC",
+)
+
+integration = integrate_curve(
+    curve,
+    IntegrationSpec(
+        interval=analysis_interval,
+        # 显式示例选择：运行前按当前曲线复核。
+        baseline=BaselineSpec(
+            mode="constant",
+            left_interval=baseline_interval,
+            estimator="median",
+        ),
+        clip_negative=False,
+        interpolate_bounds=True,
+    ),
+)
+
+peaks = detect_peaks(
+    curve,
+    PeakSpec(
+        # 显式示例选择：正峰、不预设数量、候选不足不报错。
+        position_axis="temperature",
+        interval=analysis_interval,
+        count=None,
+        polarity="positive",
+        minimum_separation=minimum_separation_c,
+        smoothing_window=smoothing_window_c,
+        minimum_height=(
+            None if not minimum_height_text else float(minimum_height_text)
+        ),
+        strict=False,
+    ),
+)
+
+print("DataFrame shape:", frame.shape)
+print("Curve shapes:", curve.x.shape, curve.y.shape)
+print("Temperature shape:", curve.coordinates["temperature"].shape)
+print(
+    "Constant baseline:",
+    repr(integration.baseline.left_level),
+    curve.y_unit,
+)
+print("Integrated amount:", repr(integration.value), integration.unit)
+print("Integration region:", integration.region.x.shape)
+print("Peak curve:", peaks.smoothed.x.shape)
+for peak in peaks.peaks:
+    print(
+        "Candidate peak:",
+        repr(peak.position), "degC;",
+        repr(peak.x), "min;",
+        repr(peak.height), curve.y_unit,
+    )</code></pre>
+              </figure>
+
+              <details class="call-path">
+                <summary>脚本会写文件或修改配置吗？</summary>
+                <p>不会。它只读取一张 CSV、在内存中创建对象并打印结果。要保存表格时，应从点名的 <code>Curve</code> 明确导出，例如 <code>integration.corrected.to_frame()<wbr>.to_csv(<wbr>NEW_PATH, <wbr>index=False)</code>，并选择新的输出路径。</p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>运行前先确认</h3>
+              <ul>
+                <li>输入已经完成你接受的校准和定量步骤。</li>
+                <li>三列来自同一实验、同一行坐标。</li>
+                <li>分析温区与基线温区来自原曲线人工复核。</li>
+                <li>峰间距、平滑和阈值适合当前采样密度与噪声。</li>
+              </ul>
+              <p>脚本不自动推断科学参数。交互项必须输入；代码中写明的 constant / positive / keep-negative / interpolate / <code>count=None</code> 也只是示例选择，不能当作当前样品的通用默认。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="step-2" aria-labelledby="integration-result-title">
+        <div class="step-marker" aria-hidden="true"><span>02</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>02</span>
+            <div>
+              <h2 id="integration-result-title">解释 IntegrationResult：温度选区，时间积分</h2>
+              <p><code>Interval(axis="temperature")</code> 决定保留哪些采样点；梯形积分仍沿主轴 <code>program_time_min</code> 进行。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <div class="analysis-axis-grid" role="group" aria-label="SDK 积分选择轴与计算轴">
+                <div>
+                  <span>闭区间选点</span>
+                  <strong><code>temperature · degC</code></strong>
+                  <p>默认在线性插值后精确落到人工给出的两个温度边界。</p>
+                </div>
+                <div aria-hidden="true">→</div>
+                <div>
+                  <span>梯形积分</span>
+                  <strong><code>x · min</code></strong>
+                  <p>µmol min<sup>−1</sup> × min 自动推导为 µmol。</p>
+                </div>
+              </div>
+
+              <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="IntegrationResult 字段">
+                <table>
+                  <thead>
+                    <tr><th scope="col">字段</th><th scope="col">类型或形状</th><th scope="col">含义</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>value</code> / <code>unit</code></td><td><code>float</code> / <code>str</code></td><td>扣分析基线后的积分量与推导单位</td></tr>
+                    <tr><td><code>region</code></td><td><code>Curve · (K,)</code></td><td>温区内曲线；边界插值最多增加两个点</td></tr>
+                    <tr><td><code>baseline</code></td><td><code>BaselineResult</code></td><td>本次分析基线、扣除曲线和左右水平</td></tr>
+                    <tr><td><code>corrected</code></td><td><code>Curve · (K,)</code></td><td>扣基线后、保留负值的积分信号</td></tr>
+                    <tr><td><code>cumulative</code></td><td><code>Curve · (K,)</code></td><td>逐点累计积分，便于复核面积来源</td></tr>
+                    <tr><td><code>spec</code></td><td><code>IntegrationSpec</code></td><td>原样保留这次参数</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <aside class="science-note">
+                <strong>两种 baseline</strong>
+                <p>
+                  脚本里的 <code>constant + median</code> 是研究者为当前响应曲线选择的分析基线。它不是仪器的 vacuum baseline，也不是把缺测通道补成 <code>0 A</code>。本例保留扣基线后的负值；改为截零会改变积分量。
+                </p>
+              </aside>
+
+              <details class="call-path">
+                <summary>积分实际经过哪些对象？</summary>
+                <p><code>Curve + IntegrationSpec → integrate_curve → BaselineResult + corrected Curve + cumulative Curve → IntegrationResult</code></p>
+                <p>积分器不调用 <code>detect_peaks</code>。即使没有候选峰，人工温区仍可独立积分。</p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>研究者必须判断</h3>
+              <ul>
+                <li>分析温区是否只覆盖要归属的事件。</li>
+                <li>基线温区是否无峰且具有代表性。</li>
+                <li>constant median 是否符合曲线背景形态。</li>
+                <li>是否保留负值和是否插值边界。</li>
+              </ul>
+              <p>当前只实现 <code>trapezoid</code>；传入其他 method 会明确报参数错误。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="step-3" aria-labelledby="peak-result-title">
+        <div class="step-marker" aria-hidden="true"><span>03</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>03</span>
+            <div>
+              <h2 id="peak-result-title">解释 PeakResult：候选位置不是机理归属</h2>
+              <p><code>detect_peaks()</code> 使用自己的温区、极性、间距、平滑和阈值。它返回局部极大值候选，不计算面积。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="PeakResult 与 Peak 字段">
+                <table>
+                  <thead>
+                    <tr><th scope="col">字段</th><th scope="col">类型或单位</th><th scope="col">怎样理解</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>peaks</code></td><td><code>tuple[Peak, ...]</code></td><td>P 个候选，最终按温度位置排序</td></tr>
+                    <tr><td><code>smoothed</code></td><td><code>Curve · (Kp,)</code></td><td>只用于复核峰识别，不回写积分输入</td></tr>
+                    <tr><td><code>smoothing_half_window_points</code></td><td>点数</td><td>由输入的 °C 全宽和实际温度间距换算</td></tr>
+                    <tr><td><code>Peak.index</code></td><td>局部索引</td><td>温区截取后曲线中的位置，不是原 DataFrame index</td></tr>
+                    <tr><td><code>Peak.x</code></td><td>min</td><td>候选处的程序时间</td></tr>
+                    <tr><td><code>Peak.position</code></td><td>°C</td><td>候选峰温</td></tr>
+                    <tr><td><code>Peak.height</code></td><td>µmol min<sup>−1</sup></td><td>平滑曲线上的候选峰高</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <ol class="analysis-logic" aria-label="SDK 峰识别的显式阶段">
+                <li><span>01</span><strong>截取</strong><p>按温度闭区间选择原曲线。</p></li>
+                <li><span>02</span><strong>平滑</strong><p>0 表示不平滑；非零窗口按实际温度步长换算。</p></li>
+                <li><span>03</span><strong>筛选</strong><p>应用正峰、最小峰高与最小峰间距。</p></li>
+                <li><span>04</span><strong>返回</strong><p><code>count=None</code> 保留满足条件的候选集合。</p></li>
+              </ol>
+
+              <details class="call-path">
+                <summary><code>count=None</code> 与 <code>strict=False</code> 代表什么？</summary>
+                <p>脚本不预先规定峰数，也不会因为返回 0 个候选而报错。这适合先检查，但不表示所有局部极大值都是真实脱附峰。</p>
+                <p><code>Curve + PeakSpec → detect_peaks → local_quadratic_smooth → PeakResult</code></p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>研究者必须判断</h3>
+              <ul>
+                <li>正峰或负峰是否符合信号方向。</li>
+                <li>平滑是否保留窄峰又抑制噪声。</li>
+                <li>峰间距与阈值是否有实验依据。</li>
+                <li>候选是否在重复实验中稳定出现。</li>
+                <li>任何物种、位点与机理归属是否有独立证据。</li>
+              </ul>
+              <p>峰温来自平滑候选点；不要从打印结果直接跳到机理结论。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="review-checklist shell" aria-labelledby="sdk-checklist-title">
+        <div class="tutorial-section-offset">
+          <h2 id="sdk-checklist-title">运行结束后，逐项核对</h2>
+          <ul>
+            <li><span>01</span><strong>输入形状</strong><p><code>(N, M)</code> 与三条 <code>(N,)</code> 是否符合预期。</p></li>
+            <li><span>02</span><strong>坐标单位</strong><p>时间是 min、温度是 °C、响应是 µmol min<sup>−1</sup>。</p></li>
+            <li><span>03</span><strong>积分区域</strong><p><code>region</code> 的 K 个点是否对应人工温区。</p></li>
+            <li><span>04</span><strong>基线曲线</strong><p>constant level 与 corrected 曲线是否合理。</p></li>
+            <li><span>05</span><strong>平滑曲线</strong><p>候选峰是否来自可接受的平滑结果。</p></li>
+            <li><span>06</span><strong>参数来源</strong><p>保存本次输入，而不是只保存最终数字。</p></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="diagnostics shell" aria-labelledby="sdk-errors-title">
+        <div class="tutorial-section-offset">
+          <header class="tutorial-section-heading">
+            <h2 id="sdk-errors-title">常见错误怎么定位</h2>
+            <p><code>UsageError</code> 通常表示参数组合不成立，<code>DataError</code> 通常表示数据或范围不满足计算；文本转数值失败也可能直接是 <code>ValueError</code>。</p>
+          </header>
+
+          <div class="diagnostic-list">
+            <details>
+              <summary><code>Response table is missing column(s): ...</code></summary>
+              <p>输入缺少时间、拟合温度或点名响应列。回到产生该表的上一步检查，不要复制别的列或用 0 补齐。</p>
+            </details>
+            <details>
+              <summary><code>Curve ... contains non-finite values.</code></summary>
+              <p>三列中存在 NaN 或无穷值。先定位缺测来源并保留科研缺失语义；SDK 不会静默填零。</p>
+            </details>
+            <details>
+              <summary><code>Integration x values must be strictly increasing.</code></summary>
+              <p>程序时间倒退或重复。先核对排序、时钟和对齐过程，而不是只对响应列排序。</p>
+            </details>
+            <details>
+              <summary>温度边界无法精确插值</summary>
+              <p>两个边界必须位于实测温度范围内，温度辅助轴还要非递减。多循环或降温数据需要先人工选择合适段。</p>
+            </details>
+            <details>
+              <summary>constant baseline 参数被拒绝</summary>
+              <p>constant 必须恰好提供一个显式值或一个采样区间；使用区间时还要选择 <code>median</code> 或 <code>mean</code>。</p>
+            </details>
+            <details>
+              <summary>非零平滑窗口被拒绝</summary>
+              <p>换算后半窗口必须至少 2 点，整条选区也必须容纳它。检查采样间距，再决定用 0 或更有依据的 °C 窗口。</p>
+            </details>
+            <details>
+              <summary>想把积分结果单位改成别的标签</summary>
+              <p><code>result_unit</code> 不会替你做数值换算，也不能静默把 µmol 重标成 mmol。先完成明确的数值换算，再使用一致单位。</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-finish shell" aria-labelledby="sdk-finish-title">
+        <h2 id="sdk-finish-title">先看对象，再解释科学结果。</h2>
+        <p>DataFrame 保存表格上下文，Curve 保存一维信号契约，Result 保存本次参数和复核曲线；它们各自可检查，也不会替研究者做机理判断。</p>
+        <div>
+          <a class="button button-primary" href="analysis-workflow.html">理解同一套曲线分析</a>
+          <a class="button button-secondary" href="reference.html#sdk">查看 SDK 参考边界</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="wordmark" href="index.html">tpxtpxtpx</a>
+          <p>Python 3.11+ · version 0.8.0 · 当前完整命令聚焦 TPD</p>
+        </div>
+        <nav aria-label="页脚导航">
+          <a href="evidence.html">运行证据</a>
+          <a href="sdk-quickstart.html" aria-current="page">SDK 入门</a>
+          <a href="analysis-workflow.html">曲线分析</a>
+          <a href="commands.html">命令地图</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="reference.html#sdk">SDK 参考</a>
+          <a href="reference.html#architecture">架构</a>
+          <a href="coordinate-alignment.html">通用对齐</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

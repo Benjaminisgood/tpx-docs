@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="用 tpxtpxtpx 建立 schema 4 配置，验证 RGA 与温控原始文件，并读取只读实验概况。"
+    >
+    <meta name="theme-color" content="#f7f8f4">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="第一次检查 TPD 实验 — tpxtpxtpx">
+    <meta
+      property="og:description"
+      content="建立 schema 4 配置，验证两份原始文件，再由研究者决定下一步。"
+    >
+    <title>第一次检查 TPD 实验 — tpxtpxtpx</title>
+    <link rel="stylesheet" href="site.css">
+  </head>
+  <body class="tutorial-page">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="index.html" aria-label="tpxtpxtpx 首页">tpxtpxtpx</a>
+        <nav aria-label="主导航">
+          <a href="index.html">首页</a>
+          <a href="first-experiment.html" aria-current="page">第一次使用</a>
+          <a href="commands.html">命令地图</a>
+          <a href="reference.html#cli">CLI</a>
+          <a href="sdk-quickstart.html">SDK</a>
+          <a href="evidence.html">运行证据</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="tutorial-hero shell" aria-labelledby="tutorial-title">
+        <div class="measure tutorial-measure" aria-hidden="true">
+          <span>800</span>
+          <span>600</span>
+          <span>400</span>
+          <span>200</span>
+          <span>0 K</span>
+        </div>
+
+        <div class="tutorial-hero-copy">
+          <h1 id="tutorial-title"><span class="tutorial-title-lead">第一次检查一个</span> <span class="tutorial-title-tail">TPD 实验</span></h1>
+          <p>
+            先确认配置和两份原始文件可读，再决定下一步。这里不拟合、不扣本底，也不自动分析。
+          </p>
+          <div class="hero-actions" role="group" aria-label="教程入口">
+            <a class="button button-primary" href="#step-1">从第 1 步开始</a>
+            <a class="button button-secondary" href="index.html">返回首页</a>
+          </div>
+        </div>
+
+        <ul class="tutorial-outcomes" aria-label="完成本页后能够确认的事实">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m7.5 12 3 3 6-7"></path>
+            </svg>
+            <span>schema 4 有效</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m7.5 12 3 3 6-7"></path>
+            </svg>
+            <span>实际 AMU 可见</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m7.5 12 3 3 6-7"></path>
+            </svg>
+            <span>时间与温度范围可读</span>
+          </li>
+        </ul>
+      </section>
+
+      <nav class="step-index" aria-label="本页步骤">
+        <ol class="shell">
+          <li><a href="#prepare"><span>00</span>准备文件</a></li>
+          <li><a href="#step-1"><span>01</span>创建配置</a></li>
+          <li><a href="#step-2"><span>02</span>验证数据</a></li>
+          <li><a href="#step-3"><span>03</span>读取概况</a></li>
+        </ol>
+      </nav>
+
+      <section class="tutorial-prep shell" id="prepare" aria-labelledby="prepare-title">
+        <div class="tutorial-section-offset">
+          <header class="tutorial-section-heading">
+            <h2 id="prepare-title">先准备两份原始文件</h2>
+            <p>
+              当前 checkout 要求 Python 3.11 或更高版本。原始数据无需复制进源码仓库；配置只记录它们的位置。
+            </p>
+          </header>
+
+          <figure class="code-window install-command" aria-labelledby="install-title">
+            <figcaption class="terminal-bar" id="install-title">
+              <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+              安装当前 checkout
+            </figcaption>
+            <pre tabindex="0"><code><span class="prompt">$</span> python -m pip install -e .
+<span class="prompt">$</span> tpdtpd --version</code></pre>
+          </figure>
+
+          <div class="prep-grid">
+            <figure class="file-layout">
+              <figcaption>建议目录结构</figcaption>
+              <pre tabindex="0"><code>my-experiment/
+├── experiment.toml
+└── raw/
+    ├── rga.csv
+    └── temperature.txt</code></pre>
+              <p>相对路径以 <code>experiment.toml</code> 所在目录为基准，不以后续命令的工作目录为基准。</p>
+            </figure>
+
+            <div class="input-specs">
+              <div class="input-spec">
+                <h3>HAL RGA CSV</h3>
+                <p>数据区至少包含 <code>Time</code>、<code>ms</code> 和一个质量通道；其他诊断列可以保留。</p>
+                <div class="table-scroll" tabindex="0" role="region" aria-label="RGA 输入字段与单位">
+                  <table>
+                    <thead>
+                      <tr><th scope="col">字段</th><th scope="col">含义 / 单位</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr><td><code>Date … Time …</code></td><td>采集开始日期与 12 小时制时钟</td></tr>
+                      <tr><td><code>Time</code></td><td>HAL 显示的经过时间文本</td></tr>
+                      <tr><td><code>ms</code></td><td>经过时间，ms；用于建立采集时间轴</td></tr>
+                      <tr><td>含 <code>mass 28</code> 或 <code>28_amu</code> 的列名</td><td>m/z 28 离子电流，A</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="spec-note">
+                  真实 HAL 表头可以是 <code>Scan 1 : mass 28.00</code>；程序从列名识别 AMU，绝不按列位置猜测。
+                </p>
+              </div>
+
+              <div class="input-spec">
+                <h3>四列温控日志</h3>
+                <p>无表头、Tab 分隔、固定四列；它的行数不必与 RGA 相同。</p>
+                <div class="table-scroll" tabindex="0" role="region" aria-label="温控输入字段与单位">
+                  <table>
+                    <thead>
+                      <tr><th scope="col">位置</th><th scope="col">字段</th><th scope="col">单位</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr><td>1</td><td><code>clock</code></td><td><code>hh:mm:ss AM/PM</code></td></tr>
+                      <tr><td>2</td><td><code>elapsed_s</code></td><td>s</td></tr>
+                      <tr><td>3</td><td><code>temperature_set</code></td><td>°C</td></tr>
+                      <tr><td>4</td><td><code>temperature_real</code></td><td>°C</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="science-note">
+            <strong>先理解形状</strong>
+            <p>
+              RGA 是 N<sub>RGA</sub> 行、多质量通道的电流表；温控是 N<sub>T</sub> × 4。这里分别读取和概览，尚不把两条时间轴对齐。
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="step-1" aria-labelledby="step-1-title">
+        <div class="step-marker" aria-hidden="true"><span>01</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>01</span>
+            <div>
+              <h2 id="step-1-title">创建 schema 4 配置</h2>
+              <p>这一步只建立实验事实的骨架，不读取原始文件，也不推断目标物种。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="code-window command-window" aria-labelledby="step-1-command">
+                <figcaption class="terminal-bar" id="step-1-command">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  命令
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> cd my-experiment
+<span class="prompt">$</span> tpdtpd init experiment.toml \
+    --name <span class="string">"样品编号与实验日期"</span> \
+    --rga-csv raw/rga.csv \
+    --temperature-log raw/temperature.txt</code></pre>
+              </figure>
+
+              <p>
+                只有确实测量过才增加 <code>--mass-mg 35</code> 或 <code>--bet-m2-g 596</code>。未知值应省略，不能填 <code>0</code>。
+              </p>
+
+              <dl class="effect-list">
+                <div><dt>写入</dt><dd>一个新的 <code>experiment.toml</code></dd></div>
+                <div><dt>不写入</dt><dd>原始 CSV、温控日志或任何处理产物</dd></div>
+                <div><dt>覆盖规则</dt><dd>默认拒绝已有目标；只有明确决定后才使用 <code>--force</code></dd></div>
+              </dl>
+
+              <details class="call-path">
+                <summary>这条命令实际调用了什么？</summary>
+                <p><code>tpdtpd → method_main → init.execute → write_experiment_config</code></p>
+                <p>CLI 负责参数与路径，<code>tpx.config</code> 负责写出严格的 schema 4 配置。</p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>研究者检查</h3>
+              <ul>
+                <li>实验名称能否唯一指向这次 TPD。</li>
+                <li>两条相对路径是否指向对应原始文件。</li>
+                <li>质量与 BET 是否来自真实独立测量。</li>
+              </ul>
+              <p>新配置的 calibration 为空，reference 保留未审核状态；vacuum 保存当前 AMU→常数电流初值，后续可逐 AMU 审核 raw-bound 纯指数。fragmentation 写入显式 identity mapping，但它没有 pending / accept 状态，也不代表本实验已有碎片标定：先用 <code>fragmentation show</code> 检查，必要时由研究者执行 <code>fragmentation set</code>。默认仪器信息也应按实验事实核对。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="step-2" aria-labelledby="step-2-title">
+        <div class="step-marker" aria-hidden="true"><span>02</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>02</span>
+            <div>
+              <h2 id="step-2-title">检查配置、原始数据与必需通道</h2>
+              <p>用同一个只读入口严格加载 TOML、读取 RGA 与温控文件，并按需核对下游明确要求的 AMU；成功不等于科学判断已经完成。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="code-window command-window" aria-labelledby="step-2-command">
+                <figcaption class="terminal-bar" id="step-2-command">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  最小真实数据检查
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd config inspect experiment.toml</code></pre>
+              </figure>
+
+              <div class="parameter-explainer">
+                <h3>默认 <code>1 s</code> 到底是什么？</h3>
+                <p>
+                  它是比较墙钟步长与 <code>elapsed_s</code> 步长、判断是否开启新时间重建分段的默认阈值。普通日志直接省略该参数；只有复核仪器计时特性后才覆盖，它不是固定科研常数。
+                </p>
+              </div>
+
+              <figure class="code-window command-window compact-command" aria-labelledby="required-mass-command">
+                <figcaption class="terminal-bar" id="required-mass-command">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  下一步明确需要 m/z 28 与 40 时
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd config inspect experiment.toml \
+    --require-mass <span class="value">28</span> --require-mass <span class="value">40</span></code></pre>
+              </figure>
+
+              <div class="output-modes">
+                <div>
+                  <h3>默认：给人看</h3>
+                  <p>报告 schema、配置 SHA256、实验事实、两份数据概况，以及要求的通道是否均存在。</p>
+                </div>
+                <div>
+                  <h3>显式 <code>--json</code>：给机器</h3>
+                  <p>在同一命令末尾增加 <code>--json</code>，获得点数、实际与必需 AMU，以及完整机器字段。</p>
+                </div>
+              </div>
+
+              <p>
+                命令返回 0 后，继续在同一份报告中人工复核；无需再运行第二个配置/数据检查入口。历史版本运行证据及其与当前接口的区别见<a href="evidence.html#raw-validation">运行证据页</a>。
+              </p>
+
+              <details class="call-path">
+                <summary>检查通过证明了什么，又没有证明什么？</summary>
+                <p>
+                  它证明 schema、路径、时间轴和要求的 AMU 可读。RGA 读取只因无效 <code>ms</code> 丢行；单个电流格缺失不会自动让检查失败。
+                </p>
+                <p>它不证明物种指认、本底、碎片矩阵、校准或实验选区正确。</p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>研究者检查</h3>
+              <ul>
+                <li>报告必须同时包含 RGA 与温控概况。</li>
+                <li><code>--require-mass</code> 必须来自下一步真实需求；指定后应显示为 <code>(present)</code>。</li>
+                <li>任一错误先回到原始记录，不静默排序或补零。</li>
+              </ul>
+              <p>预期失败统一退出码 2、错误写入 stderr；空 stdout 不是有效结果。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="step-3" aria-labelledby="step-3-title">
+        <div class="step-marker" aria-hidden="true"><span>03</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>03</span>
+            <div>
+              <h2 id="step-3-title">人工复核同一份只读概况</h2>
+              <p>第 2 步已经把配置事实与两份原始数据概况放在一起；这里审核同一份输出，不重复读取文件。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="verified-output" aria-labelledby="verified-output-title">
+                <figcaption id="verified-output-title">
+                  <strong>只读概况重点字段</strong>
+                  <span>数值只示意报告格式，不是实验默认值</span>
+                </figcaption>
+                <pre tabindex="0"><code>Schema:            4 (valid)
+RGA duration:      687.996 min (8811 points)
+Measured channels: m/z 2, m/z 14, m/z 18, m/z 28, m/z 40
+Required channels: m/z 28, m/z 40 (present)
+Temperature:       -181.90 to 245.60 °C (16653 points)</code></pre>
+              </figure>
+
+              <p>
+                机器需要完整字段时，在命令末尾显式增加 <code>--json</code>。输出模式不会根据 TTY 或重定向自动改变。
+              </p>
+
+              <details class="call-path">
+                <summary>这条只读命令经过哪些层？</summary>
+                <p>
+                  <code>config inspect → load_experiment_config → read_rga_csv + read_temperature_log → 人类报告或显式 JSON</code>
+                </p>
+                <p>两份表在这里各读取一次、分别概览；时间对齐属于后续独立命令。</p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>研究者检查</h3>
+              <ul>
+                <li>实验身份、样品实测属性与内标记录。</li>
+                <li>实际 AMU、RGA 起始时间、时长和点数。</li>
+                <li>温控点数与实测温度范围。</li>
+                <li>校准审核状态与当前逐 AMU 真空模型；默认 identity fragmentation mapping 是否适用于本实验，必要时是否已由 <code>fragmentation set</code> 更新。</li>
+              </ul>
+              <p>配置中的分析通道与 RGA 实际测得的 AMU 是两个集合，不能混为一谈。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="review-checklist shell" aria-labelledby="checklist-title">
+        <div class="tutorial-section-offset">
+          <h2 id="checklist-title">你要亲自确认什么</h2>
+          <ul>
+            <li><span>01</span><strong>实验身份</strong><p>名称、日期、样品和 TPD 方法都属于同一次实验。</p></li>
+            <li><span>02</span><strong>实测属性</strong><p>质量与 BET 有记录才填写；未知保持缺失，不写成 0。</p></li>
+            <li><span>03</span><strong>实际通道</strong><p>AMU 列表来自真实表头，并覆盖下一步所需信号。</p></li>
+            <li><span>04</span><strong>时间尺度</strong><p>RGA 时长、点数与温控点数符合采集记录。</p></li>
+            <li><span>05</span><strong>温度范围</strong><p>最低、最高实测温度与实验程序相符。</p></li>
+            <li><span>06</span><strong>初始状态</strong><p>空 calibration、未审核 reference、当前 vacuum 电流映射，以及显式默认的 identity mapping 没有被误当成本实验测得、拟合或标定的结果。</p></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="diagnostics shell" aria-labelledby="diagnostics-title">
+        <div class="tutorial-section-offset">
+          <header class="tutorial-section-heading">
+            <h2 id="diagnostics-title">常见错误怎么判断</h2>
+            <p>错误信息是停止并检查事实的信号，不是绕过约束的理由。</p>
+          </header>
+
+          <div class="diagnostic-list">
+            <details>
+              <summary><code>Unsupported schema_version …; expected 4.</code></summary>
+              <p>输入不是当前 schema 4。不要把历史 schema 或旧顶层 <code>tpdtpd inspect</code> 写成当前接口；应按原始实验记录建立当前配置。</p>
+            </details>
+            <details>
+              <summary><code>RGA CSV does not exist</code> / <code>Temperature log does not exist</code></summary>
+              <p>从 <code>experiment.toml</code> 所在目录检查相对路径、文件名与读取权限，而不是只看当前 shell 目录。</p>
+            </details>
+            <details>
+              <summary><code>Cannot find Date/Time metadata or data header</code></summary>
+              <p>HAL CSV 必须有 <code>Date … Time …</code> 元数据，数据头前两列必须是 <code>Time, ms</code>。</p>
+            </details>
+            <details>
+              <summary><code>Duplicate m/z … columns</code> / <code>No mass channels found</code></summary>
+              <p>检查质量列命名。每个识别出的 AMU 只能出现一次，且至少需要一个含 <code>mass 数字</code> 或 <code>数字_amu</code> 的列名。</p>
+            </details>
+            <details>
+              <summary><code>RGA time is not monotonic</code></summary>
+              <p><code>ms</code> 发生倒退。回到原始采集文件判断拼接、重启或导出问题，不要静默排序。</p>
+            </details>
+            <details>
+              <summary><code>Invalid clock value</code> / 无法重建严格递增温控时间轴</summary>
+              <p>检查四列顺序、Tab 分隔、12 小时制时钟，以及暂停或跨午夜记录；再按日志特征选择显式容差。</p>
+            </details>
+            <details>
+              <summary><code>Required AMU channel(s) are missing from RGA data</code></summary>
+              <p><code>--require-mass</code> 指定的信号没有被真实采集。核对仪器设置；缺失通道不能写成 <code>0 A</code>。</p>
+            </details>
+            <details>
+              <summary>参数组合或目标文件错误</summary>
+              <p><code>--require-mass</code> 必须是正整数且可重复；时钟容差通常保留默认值，只有已复核仪器日志特征后才覆盖。重复初始化默认拒绝覆盖，只有明确决定后才使用 <code>--force</code>。</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-finish shell" aria-labelledby="finish-title">
+        <h2 id="finish-title">确认事实之后，再选择下一步。</h2>
+        <p>完成标准是“配置与数据可读，并已人工复核概况”，不是“分析已经自动完成”。</p>
+        <div>
+          <a class="button button-primary" href="temperature-alignment.html">下一步：复核温程</a>
+          <a class="button button-secondary" href="commands.html">打开命令地图</a>
+          <a class="button button-secondary" href="index.html#workflow">查看完整科研流程</a>
+        </div>
+        <p class="tutorial-finish-next">自然顺序是 <code>temperature suggest → 人工复核 → fit → align</code>；完成后再逐项处理本底、碎片、校准与定量。完成显式定量后，再阅读<a href="analysis-workflow.html">曲线分析入门</a>。</p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="wordmark" href="index.html">tpxtpxtpx</a>
+          <p>Python 3.11+ · version 0.8.0 · 当前完整命令聚焦 TPD</p>
+        </div>
+        <nav aria-label="页脚导航">
+          <a href="evidence.html">运行证据</a>
+          <a href="analysis-workflow.html">曲线分析</a>
+          <a href="first-experiment.html" aria-current="page">第一次使用</a>
+          <a href="commands.html">命令地图</a>
+          <a href="reference.html#cli">CLI</a>
+          <a href="sdk-quickstart.html">SDK</a>
+          <a href="reference.html#architecture">架构</a>
+          <a href="coordinate-alignment.html">通用对齐</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

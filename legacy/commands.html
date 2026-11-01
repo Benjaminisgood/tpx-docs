@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="tpdtpd 0.8.0 的 12 个 TPD 顶层命令地图，以及完全独立的 tpxdocs 离线文档入口。"
+    >
+    <meta name="theme-color" content="#f7f8f4">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="TPD 命令地图 — tpxtpxtpx">
+    <meta
+      property="og:description"
+      content="从当前科研问题出发，在 5 个真实分组中找到下一条 tpdtpd 命令；文档学习由 tpxdocs 独立提供。"
+    >
+    <title>TPD 命令地图 — tpxtpxtpx</title>
+    <link rel="stylesheet" href="site.css">
+  </head>
+  <body class="commands-page">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="index.html" aria-label="tpxtpxtpx 首页">tpxtpxtpx</a>
+        <nav aria-label="主导航">
+          <a href="index.html">首页</a>
+          <a href="commands.html" aria-current="page">命令地图</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="reference.html#cli">CLI 参考</a>
+          <a href="evidence.html">运行证据</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="command-hero shell" aria-labelledby="command-map-title">
+        <div class="measure command-measure" aria-hidden="true">
+          <span>12</span>
+          <span>05</span>
+          <span>01</span>
+          <span>DOC</span>
+        </div>
+
+        <div class="command-hero-grid">
+          <div class="command-hero-copy">
+            <p class="command-eyebrow">TPD COMMAND MAP · 12 个 TPD 顶层命令 · 35 个叶命令 · 5 个真实分组 · 1 个独立文档入口</p>
+            <h1 id="command-map-title">先说清问题，<br>再选择命令。</h1>
+            <p>
+              先找到当前要回答的科研问题，再核对这一条命令的输入、产出与人工判断点。页面只负责导航，不替研究者安排自动流程。
+            </p>
+            <div class="hero-actions" role="group" aria-label="命令地图入口">
+              <a class="button button-primary" href="#configuration">按问题查找</a>
+              <a class="button button-secondary" href="first-experiment.html">第一次检查实验</a>
+              <a class="button button-secondary" href="cli-command-reference.md">36 条叶命令中文参考</a>
+            </div>
+            <p class="command-version">
+              依据当前 <code>tpdtpd 0.8.0</code> registry 与运行时帮助；完整参数以 <code>tpdtpd COMMAND --help</code> 为准。
+            </p>
+          </div>
+
+          <aside class="command-compass" aria-labelledby="compass-title">
+            <h2 id="compass-title">每次运行前的三个动作</h2>
+            <ol>
+              <li>
+                <span>01</span>
+                <div><strong>定位问题</strong><p>准备、处理、分析，还是绘图？</p></div>
+              </li>
+              <li>
+                <span>02</span>
+                <div><strong>打开叶命令帮助</strong><p>核对必需参数、单位、文件与覆盖规则。</p></div>
+              </li>
+              <li>
+                <span>03</span>
+                <div><strong>只执行一个判断</strong><p>读完人类报告，再决定是否继续下一步。</p></div>
+              </li>
+            </ol>
+          </aside>
+        </div>
+      </section>
+
+      <nav class="command-jump" aria-label="命令分组">
+        <ol class="shell">
+          <li><a href="#documentation"><span>DOC</span>文档中心</a></li>
+          <li><a href="#creation"><span>01</span>新建实验</a></li>
+          <li><a href="#configuration"><span>02</span>配置检查</a></li>
+          <li><a href="#process"><span>03</span>逐项处理</a></li>
+          <li><a href="#analyze"><span>04</span>分析曲线</a></li>
+          <li><a href="#publish"><span>05</span>复核与发布</a></li>
+        </ol>
+      </nav>
+
+      <section class="command-principles shell" aria-labelledby="principles-title">
+        <div>
+          <p class="command-eyebrow">READ THIS FIRST</p>
+          <h2 id="principles-title">命令目录不是自动 Pipeline</h2>
+        </div>
+        <div class="command-principle-copy">
+          <p>
+            <code>tpdtpd</code> 负责参数和文件适配，科学计算位于 <code>tpx</code> SDK。某些叶命令创建新工件，某些还会更新实验配置；执行前应查看叶命令帮助，完成后应阅读当次报告。
+          </p>
+          <p>
+            参数界面只按真实 parser 区分“必须给值”和“已有默认值”：没有单独的高级或可选分组。有默认值的参数可折叠，但界面必须显示默认值；完整逐项说明见 <a href="cli-command-reference.md">36 条叶命令中文参考</a>。
+          </p>
+          <p>
+            TTY 中的 <code>tpdtpd --list</code> 保留交互命令菜单；非 TTY 或 <code>--list --plain</code> 给出确定性的文本目录。阶段命令默认输出适合人读的报告；机器调用应在首次执行叶命令时加 <code>--json</code> 并读取 stdout，不要为了取得 JSON 重跑写文件或改配置的 action。
+          </p>
+          <p class="command-example-warning">
+            下方示例来自当前 registry，只用于展示语法。路径、物种、区间、阈值、质量与 BET 必须换成真实且已复核的值；未知或未测量值应省略，不能填成 0。
+          </p>
+        </div>
+      </section>
+
+      <div class="command-groups shell">
+        <section class="command-group" id="documentation" aria-labelledby="documentation-group-title">
+          <header class="command-group-heading">
+            <span class="command-group-number">DOC</span>
+            <div>
+              <p>independent documentation</p>
+              <h2 id="documentation-group-title">独立文档入口</h2>
+            </div>
+            <p><code>tpxdocs</code> 只列出和读取离线学习资源；它不属于 <code>tpdtpd</code> manifest，也不会打开或修改实验。</p>
+          </header>
+
+          <div class="command-grid">
+            <article class="command-card" id="command-documentation">
+              <header class="command-card-heading">
+                <span>DOC.1</span>
+                <h3><code>tpxdocs</code></h3>
+              </header>
+              <p class="command-purpose">浏览独立的离线文档目录，阅读 TPD SOP、网页教程、技术文档与教学图片。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd><code>list</code> 无需实验文件；<code>show RESOURCE_ID</code> 只接受目录中列出的资源。</dd></div>
+                <div><dt>输出</dt><dd>离线资源目录或一项已核验资源；机器调用可显式请求 <code>--json</code>。</dd></div>
+                <div><dt>你来决定</dt><dd>当前实验需要阅读哪项资料；文档协议不属于方法 manifest，也不会执行科研命令。</dd></div>
+              </dl>
+              <p class="command-entry"><span>安全入口</span><code>tpxdocs list</code></p>
+              <details class="command-details">
+                <summary>查看离线文档目录</summary>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpxdocs list
+<span class="prompt">$</span> tpxdocs show TPDsop/index.md</code></pre>
+              </details>
+            </article>
+          </div>
+        </section>
+
+        <section class="command-group" id="creation" aria-labelledby="creation-group-title">
+          <header class="command-group-heading">
+            <span class="command-group-number">01</span>
+            <div>
+              <p>experiment creation</p>
+              <h2 id="creation-group-title">新建实验</h2>
+            </div>
+            <p>只负责根据已知实验事实创建新的 schema 4 TOML；不属于当前实验的配置检查。</p>
+          </header>
+
+          <div class="command-grid">
+            <article class="command-card" id="command-init">
+              <header class="command-card-heading">
+                <span>01.1</span>
+                <h3><code>init</code></h3>
+              </header>
+              <p class="command-purpose">从实验事实创建不预设目标物种的 schema 4 TOML。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd>新配置路径、实验名、RGA CSV、温控日志；质量与 BET 可选。</dd></div>
+                <div><dt>输出</dt><dd>新的 TOML：reference inherited-unreviewed、vacuum AMU→常数电流初值、2/18/28/40/44 五通道 identity fragmentation；后续可逐 AMU 审核纯指数。</dd></div>
+                <div><dt>你来决定</dt><dd>名称与路径是否属于同一次实验；未测质量、BET 或 m/z 14 不能填成 0。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看参数</span><code>tpdtpd init --help</code></p>
+              <details class="command-details">
+                <summary>查看当前 registry 示例</summary>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd init experiment.toml \
+    --name '20260804#3' \
+    --rga-csv raw.csv \
+    --temperature-log temperature.txt</code></pre>
+              </details>
+            </article>
+          </div>
+        </section>
+
+        <section class="command-group" id="configuration" aria-labelledby="configuration-group-title">
+          <header class="command-group-heading">
+            <span class="command-group-number">02</span>
+            <div>
+              <p>configuration check</p>
+              <h2 id="configuration-group-title">配置检查</h2>
+            </div>
+            <p>只读核对当前配置、原始数据、处理谱系与命令状态；不包含文档学习或新建实验。</p>
+          </header>
+
+          <div class="command-grid">
+            <article class="command-card" id="command-config">
+              <header class="command-card-heading">
+                <span>02</span>
+                <h3><code>config</code></h3>
+              </header>
+              <p class="command-purpose">按子命令分别检查 schema 4 配置、原始数据概况、ProcessingRecord 谱系或命令证据状态。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd>三条子命令都严格解析 schema 4 TOML。<code>inspect</code> 始终读取配置直接引用的 RGA 与温控日志，可重复指定 <code>--require-mass</code>；<code>provenance</code> 不读取这两份原始数据，只核验 ProcessingRecord 输出；<code>status</code> 不消费时钟容差或 AMU 参数，但可能读取或哈希当前记录绑定的证据/来源文件。</dd></div>
+                <div><dt>输出</dt><dd><code>inspect</code> 的配置与原始数据概况、<code>provenance</code> 的处理谱系核验，或 <code>status</code> 的命令就绪度与审核门禁；全部只读。</dd></div>
+                <div><dt>你来决定</dt><dd>必需 AMU 是否来自下游真实需求，以及实际通道、时长、点数与温度范围是否符合采集记录。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看参数</span><code>tpdtpd config inspect --help</code></p>
+              <details class="command-details">
+                <summary>查看 3 个子命令与示例</summary>
+                <ul class="subcommand-list">
+                  <li><code>inspect</code><span>读取配置及其引用数据的概况。</span></li>
+                  <li><code>provenance</code><span>严格加载 schema 4 后，核验并展示完整 ProcessingRecord 谱系。</span></li>
+                  <li><code>status</code><span>严格加载 schema 4，展示命令就绪度、证据完整性与审核门禁；按当前记录需要读取或哈希其证据/来源文件，不能当作纯配置门禁。</span></li>
+                </ul>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd config inspect experiment.toml \
+    --require-mass 28 --require-mass 40</code></pre>
+              </details>
+            </article>
+          </div>
+        </section>
+
+        <section class="command-group" id="process" aria-labelledby="process-group-title">
+          <header class="command-group-heading">
+            <span class="command-group-number">03</span>
+            <div>
+              <p>process one decision at a time</p>
+              <h2 id="process-group-title">每次只处理一个判断</h2>
+            </div>
+            <p>建议、复核和执行分开。输入文件由研究者显式指定，程序不根据文件存在性猜测上一阶段。</p>
+          </header>
+
+          <div class="command-grid">
+            <article class="command-card" id="command-temperature">
+              <header class="command-card-heading">
+                <span>03.1</span>
+                <h3><code>temperature</code></h3>
+              </header>
+              <p class="command-purpose">建议升温边界、拟合已复核温程，再把模型应用到 RGA 时钟。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd>suggest/fit 使用配置引用的温控日志与人工边界；align 只把显式选择的 <code>.tpxmodel</code> 作为温度模型输入，并使用当前 RGA、温控源及本次时钟策略。</dd></div>
+                <div><dt>输出</dt><dd>按子命令产生边界建议、拟合审阅 CSV、可重载 TOML 模型、拟合记录或温度对齐电流表。</dd></div>
+                <div><dt>你来决定</dt><dd>边界、模型适用性、时间偏移与越界规则；suggestion 不等于 reviewed 结果。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看分支</span><code>tpdtpd temperature --help</code></p>
+              <details class="command-details">
+                <summary>查看 3 个子命令与示例</summary>
+                <ul class="subcommand-list">
+                  <li><code>suggest</code><span>检查温控日志并建议升温边界。</span></li>
+                  <li><code>fit</code><span>拟合显式、人工复核的升温区间。</span></li>
+                  <li><code>align</code><span>把已复核温程模型应用到 RGA 时钟。</span></li>
+                </ul>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd temperature suggest experiment.toml</code></pre>
+              </details>
+            </article>
+
+            <article class="command-card" id="command-vacuum">
+              <header class="command-card-heading">
+                <span>03.2</span>
+                <h3><code>vacuum</code></h3>
+              </header>
+              <p class="command-purpose">从完整标气采集为每个 AMU 独立审核常数或两锚点纯指数真空模型，再显式写入并逐行扣除。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd><code>show</code> 读取 experiment TOML 与完整 HAL RGA CSV，并要求无默认值的 <code>--baseline-model constant|exponential</code>。constant 每 AMU 恰好一个窗口；exponential 每 AMU 恰好两个按输入顺序排列、严格分离且不重叠的首尾窗口。</dd></div>
+                <div><dt>状态/输出</dt><dd><code>show</code> 写 <code>records/vacuum_baseline_review.json</code> 与完整信号/模型/窗口复核图；指数图另含扣除后完整信号与零线，不修改 TOML。<code>set --current</code> 写常数；互斥的 <code>set --review-record</code> 验证 config/raw SHA-256 后接受整组模型。<code>subtract</code> 写 <code>m*_input_a / m*_baseline_a / m*_signal_a</code>、ProcessingRecord，并沿用 <code>calibration_vacuum.csv</code> / <code>desorption_vacuum.csv</code> / <code>vacuum.csv</code> 默认名。</dd></div>
+                <div><dt>你来决定</dt><dd>每个信号的模型、严格窗口、mean/median 和最少点数。指数要求 <code>I1 &gt; I2 &gt; 0</code>，纯指数最终趋近 0；程序不回退模型、不裁剪负值，也不自动判断稳定或接受。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看分支</span><code>tpdtpd vacuum --help</code></p>
+              <details class="command-details">
+                <summary>查看 3 个子命令与示例</summary>
+                <ul class="subcommand-list">
+                  <li><code>show</code><span>审核常数或按 <code>b(t)=I1 exp[-k(t-t1)]</code> 拟合的纯指数；记录锚值、k/tau、残差、窗口斜率等机械证据，不写 TOML。</span></li>
+                  <li><code>set</code><span>用互斥的 <code>--current</code> 或 <code>--review-record</code> 写入；新模型仅替换同 AMU，其他 AMU 保留，因此可混用两种模型。</span></li>
+                  <li><code>subtract</code><span>指数只接受绑定 raw 或可验证同源 aligned 子表；缺时间、来源不符或越界都会拒绝。</span></li>
+                </ul>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd vacuum show experiment.toml \
+    --input calibration.csv \
+    --baseline-model exponential \
+    --signal-window 28 1 3 \
+    --signal-window 28 24 27.5 \
+    --estimator median
+
+<span class="prompt">$</span> tpdtpd vacuum set experiment.toml \
+    --review-record records/vacuum_baseline_review.json</code></pre>
+              </details>
+            </article>
+
+            <article class="command-card" id="command-response-zeroing">
+              <header class="command-card-heading">
+                <span>03.3</span>
+                <h3><code>response_zeroing</code></h3>
+              </header>
+              <p class="command-purpose">在 aligned fragmentation 之后按物种从研究者选择的任意稳定无峰窗口估计常数零偏；窗口可以在升温前，也可以在峰后尾段。先看完整曲线与扣除前后窗口，再一次接受并应用当前输入对应的全部零点。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd><code>heating_desorption_aligned fragmentation.correct</code> 的已验证 resolved-species 表。</dd></div>
+                <div><dt>状态/输出</dt><dd><code>estimate</code> 把一个物种的坐标、窗口、估计器、offset 与输入身份写入 experiment TOML，并默认生成 <code>records/&lt;target&gt;_response_zeroing_estimate.json</code> 和输入旁的四面板审核图；状态仍是 pending。<code>apply</code> 没有 target 参数，它会按原输入重算并核对全部当前定义；显式运行 apply 就是共同接受这些匹配定义，并输出 <code>response_zeroed.csv</code>。</dd></div>
+                <div><dt>你来决定</dt><dd>每次 estimate 的 target、选择坐标、稳定无峰窗口、median/mean 和最少点数。尾段优先用 <code>program_time_min</code> 精确锁定连续时段；程序不会自动替你选择“最低且稳定”的区域。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看分支</span><code>tpdtpd response_zeroing --help</code></p>
+              <details class="command-details">
+                <summary>查看 2 个子命令与示例</summary>
+                <ul class="subcommand-list">
+                  <li><code>estimate</code><span>用 <code>program_time_min</code>、<code>acquisition_time_min</code> 或 <code>temperature_fit_c</code> 选择一个连续稳定无峰窗口；温度带若命中多个不连续时段会拒绝。</span></li>
+                  <li><code>apply</code><span>从 experiment TOML 读取所有与当前输入匹配的 estimate，按窗口重算 offset 后一次应用；没有 estimate 的 resolved species 原样保留。</span></li>
+                </ul>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd response_zeroing estimate experiment.toml \
+    --input out/desorption_fragmentation.csv --target CO \
+    --coordinate-column program_time_min --zero-window 30:40 \
+    --estimator median --minimum-points 64 \
+    --record-output out/records/co_response_zeroing_estimate.json
+
+<span class="prompt">$</span> tpdtpd response_zeroing apply experiment.toml \
+    --input out/desorption_fragmentation.csv \
+    --output out/response_zeroed.csv</code></pre>
+              </details>
+              <p><code>vacuum</code> 是 fragmentation 前逐 AMU 常数/指数扣除；calibration background 只计算标气平台增量；<code>response_zeroing</code> 是 fragmentation 后逐物种常数修正；integration baseline 才是定量后的面积参考线。四者不能互换。历史 AMU 域 preheat 案例也不是当前命令语义。</p>
+            </article>
+
+            <article class="command-card" id="command-reference">
+              <header class="command-card-heading">
+                <span>03.4</span>
+                <h3><code>reference</code></h3>
+              </header>
+              <p class="command-purpose">查看、修改并显式接受内标气身份、流量和标准状态。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd>TOML 中完整 reference 记录；set 还需至少一个实际变更值。</dd></div>
+                <div><dt>输出</dt><dd>含当前/已接受指纹与有效性的只读状态报告、pending 配置更新，或指纹绑定的 accept 记录。</dd></div>
+                <div><dt>你来决定</dt><dd>继承的 Ar/25 sccm/标准状态是否属于本实验；只有 current 状态能用于绝对定量。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看分支</span><code>tpdtpd reference --help</code></p>
+              <details class="command-details">
+                <summary>查看 3 个子命令与示例</summary>
+                <ul class="subcommand-list">
+                  <li><code>show</code><span>显示完整值、当前/已接受指纹、review validity 与绝对定量门禁。</span></li>
+                  <li><code>set</code><span>把变更后的完整 reference 状态保存为 pending。</span></li>
+                  <li><code>accept</code><span>传回 show 展示的当前指纹；写回前比较配置快照，发现并发改动则拒绝覆盖。</span></li>
+                </ul>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd reference show experiment.toml
+<span class="prompt">$</span> tpdtpd reference accept experiment.toml --expected-reference-gas-fingerprint FINGERPRINT_FROM_REFERENCE_SHOW</code></pre>
+              </details>
+            </article>
+
+            <article class="command-card" id="command-fragmentation">
+              <header class="command-card-heading">
+                <span>03.5</span>
+                <h3><code>fragmentation</code></h3>
+              </header>
+              <p class="command-purpose">复核“观测 AMU × 物种”矩阵，再把一张显式观测质量电流表求解为物种电流。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd>TOML 中当前运行时矩阵，以及一张含规范 <code>m{AMU}_signal_a</code> 或原始 <code>m{AMU}_raw</code> 列的显式观测表；严格模式要求配置中的每个 AMU 都存在。无父记录或 raw 表只适合独立矩阵诊断；正式处理链应先完成 vacuum，并且只有继承 SHA256 匹配父 <code>ProcessingRecord</code> 和对应 artifact role 的结果，才能进入后续 calibration / quantify。</dd></div>
+                <div><dt>输出</dt><dd>矩阵报告、配置矩阵，或含本步 <code>m{AMU}_input_a</code> 与 <code>{species}_resolved_a</code> 的新 CSV。校准/脱附支路默认分别为 <code>calibration_fragmentation.csv</code> / <code>desorption_fragmentation.csv</code>，角色无法验证时才回退 <code>fragmentation.csv</code>。表头不编码处理历史；只有匹配的 ProcessingRecord、角色/阶段与 SHA-256 才证明来源。</dd></div>
+                <div><dt>你来决定</dt><dd>行列标签、系数与可解性；单位阵也应作为一次显式处理保留。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看分支</span><code>tpdtpd fragmentation --help</code></p>
+              <details class="command-details">
+                <summary>查看 3 个子命令与示例</summary>
+                <ul class="subcommand-list">
+                  <li><code>show</code><span>查看 TOML 中当前运行时矩阵及来源；新建配置可能仍是默认 identity mapping。</span></li>
+                  <li><code>set</code><span>原子保存研究者复核的运行时矩阵。</span></li>
+                  <li><code>correct</code><span>对一张显式观测电流表求解物种电流。</span></li>
+                </ul>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd fragmentation show experiment.toml</code></pre>
+              </details>
+            </article>
+
+            <article class="command-card" id="command-calibration">
+              <header class="command-card-heading">
+                <span>03.6</span>
+                <h3><code>calibration</code></h3>
+              </header>
+              <p class="command-purpose">建议吸附校准区间，再从真实配气组成拟合目标物种/参比响应系数。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd>完整采集的 vacuum → fragmentation 表、目标物种/质量、区间与真实配气比。</dd></div>
+                <div><dt>输出</dt><dd>suggestion、provisional preview 指标，或 reviewed fit 系数/指纹；preview/fit 的科学状态写入 experiment TOML，详细证据默认进入 <code>records/</code>，不再生成单行 CSV。</dd></div>
+                <div><dt>你来决定</dt><dd>校准背景、稳定平台、目标质量与实际混合比例。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看分支</span><code>tpdtpd calibration --help</code></p>
+              <details class="command-details">
+                <summary>查看 3 个子命令与示例</summary>
+                <ul class="subcommand-list">
+                  <li><code>suggest</code><span>建议给气前背景区和吸附稳定平台。</span></li>
+                  <li><code>preview</code><span>计算指标/图但不提交 reviewed calibration；<code>--compare</code> 并列 suggestion、preview 和 active reviewed。</span></li>
+                  <li><code>fit</code><span>拟合 expected/measured 响应并保存复核结果。</span></li>
+                </ul>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd calibration suggest experiment.toml \
+    --input out/calibration_fragmentation.csv \
+    --target CO --target-mass 28</code></pre>
+              </details>
+            </article>
+
+            <article class="command-card" id="command-quantify">
+              <header class="command-card-heading">
+                <span>03.7</span>
+                <h3><code>quantify</code></h3>
+              </header>
+              <p class="command-purpose">把已处理的物种电流逐步检查为相对响应、组成、流量与摩尔速率。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd>来自已验证 <code>vacuum → fragmentation</code> 或 <code>vacuum → fragmentation → response_zeroing</code> aligned 脱附链的物种响应，以及匹配当前 vacuum / fragmentation 指纹和处理记录的 active reviewed calibration。</dd></div>
+                <div><dt>输出</dt><dd>四个叶命令依次各写一张 long-format CSV：<code>relative.csv → composition.csv → flow.csv → rate.csv</code>。每行用 <code>target_species</code> 保留物种身份，多物种共享同一组表。</dd></div>
+                <div><dt>你来决定</dt><dd>一个或多个 target species 与最低参比比例；<code>--target CO,NH3</code> 和中文逗号 <code>--target 'CO，NH3'</code> 都受支持。当前没有 <code>quantify all</code> 或 combined/split 布局。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看分支</span><code>tpdtpd quantify --help</code></p>
+              <details class="command-details">
+                <summary>查看 4 个子命令与示例</summary>
+                <ul class="subcommand-list">
+                  <li><code>relative</code><span>目标电流除以配置的参比电流。</span></li>
+                  <li><code>composition</code><span>用目标校正因子换算摩尔比。</span></li>
+                  <li><code>flow</code><span>把目标/参比摩尔比换算为目标流量（sccm）。</span></li>
+                  <li><code>rate</code><span>把 sccm 换算为摩尔速率（µmol min<sup>−1</sup>）。</span></li>
+                </ul>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd quantify relative experiment.toml \
+    --target CO,NH3 --input out/fragmentation.csv
+
+<span class="prompt">$</span> tpdtpd quantify composition experiment.toml --target CO,NH3 --input out/relative.csv
+<span class="prompt">$</span> tpdtpd quantify flow experiment.toml --target CO,NH3 --input out/composition.csv
+<span class="prompt">$</span> tpdtpd quantify rate experiment.toml --target CO,NH3 --input out/flow.csv</code></pre>
+              </details>
+            </article>
+
+            <article class="command-card" id="command-normalize">
+              <header class="command-card-heading">
+                <span>03.8</span>
+                <h3><code>normalize</code></h3>
+              </header>
+              <p class="command-purpose">在保留绝对摩尔速率的同时，增加按样品质量和可选 BET 面积归一化的列。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd>含 <code>response_umol_min</code> 的 long-format <code>rate.csv</code>；质量/BET 默认来自 TOML，CLI 可显式复核覆盖。</dd></div>
+                <div><dt>输出</dt><dd>保留坐标、绝对响应和本步归一化结果的新 <code>normalized.csv</code>。</dd></div>
+                <div><dt>你来决定</dt><dd>质量与 BET 来源；与 TOML 冲突时只有 <code>--reviewed-sample-override</code> 才继续。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看参数</span><code>tpdtpd normalize --help</code></p>
+              <details class="command-details">
+                <summary>查看当前 registry 示例</summary>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd normalize experiment.toml \
+    --input out/rate.csv \
+    --mass-mg 60</code></pre>
+              </details>
+            </article>
+          </div>
+        </section>
+
+        <section class="command-group" id="analyze" aria-labelledby="analyze-group-title">
+          <header class="command-group-heading">
+            <span class="command-group-number">04</span>
+            <div>
+              <p>analyze checked curves</p>
+              <h2 id="analyze-group-title">分析已检查的曲线</h2>
+            </div>
+            <p>统一从 <code>normalized.csv</code> 出发：先预览并接受分析基线，再分别运行候选峰或正式面积动作。基线、候选摘要和面积进入 experiment TOML，逐点证据进入 <code>records/*.json</code>，不再生成分析 CSV。</p>
+          </header>
+
+          <a class="command-group-guide" href="analysis-workflow.html">
+            <span>BEGINNER GUIDE</span>
+            <strong>同一条曲线，为什么要分成看曲线、算吸附量、找峰温？</strong>
+            <small>打开曲线分析入门：真实列名、单位、输出形状与人工判断点 <span aria-hidden="true">→</span></small>
+          </a>
+
+          <div class="command-grid">
+            <article class="command-card" id="command-baseline">
+              <header class="command-card-heading">
+                <span>04.1</span>
+                <h3><code>integration baseline</code></h3>
+              </header>
+              <p class="command-purpose">先预览一条主观分析基线，人工看图后再接受同一 normalized 输入和定义；不物化基线扣除 CSV。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd>normalized CSV、规范绝对响应、程序起点、审核温区、基线模型/来源和估计量。</dd></div>
+                <div><dt>状态/输出</dt><dd><code>preview</code> 把 pending 可复算定义写入 <code>[integration_baseline.&lt;target&gt;]</code>，详细证据默认写 <code>records/&lt;target&gt;_integration_baseline_review.json</code>，审核图写在输入旁；<code>accept</code> 核验输入与定义后改为 reviewed，并写 acceptance JSON。两步都不写 CSV。</dd></div>
+                <div><dt>你来决定</dt><dd>target、模型、取样范围和审核温区；<code>accept</code> 是独立人工门禁，不会因 preview 成功而自动发生。后续动作从 normalized 表和 reviewed 定义即时复算。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看分支</span><code>tpdtpd integration baseline --help</code></p>
+              <details class="command-details">
+                <summary>查看 preview 示例</summary>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd integration baseline preview experiment.toml \
+    --input out/normalized.csv --target CO \
+    --start-c -180 --end-c 65 \
+    --baseline linear --baseline-left-range-c=-180:-170 \
+    --baseline-right-range-c=55:65 --baseline-estimator median \
+    --linear-on time
+
+<span class="prompt">$</span> tpdtpd integration baseline accept experiment.toml \
+    --input out/normalized.csv --target CO</code></pre>
+              </details>
+            </article>
+
+            <article class="command-card" id="command-integrate">
+              <header class="command-card-heading">
+                <span>04.2</span>
+                <h3><code>integration areas</code></h3>
+              </header>
+              <p class="command-purpose">从 normalized 表与已审核 TOML baseline 即时复算基线扣除响应，选择一个或多个具名温区，先预览，再沿程序时间正式积分。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd><code>normalized.csv</code>、target、稳定的 <code>result-id</code>、reviewed baseline、具名温区、负值/边界规则和可选的显式复核峰位；质量/BET 默认来自 TOML。未审核找峰候选不参与计算。</dd></div>
+                <div><dt>状态/输出</dt><dd><code>--preview</code> 只写 <code>records/&lt;result-id&gt;_areas_review.json</code> 与审核图，不写正式面积；正式运行写 <code>[peak_integration.&lt;result-id&gt;]</code> 与 <code>records/&lt;result-id&gt;_areas.json</code>。两种模式都不写 summary 或逐点 CSV。</dd></div>
+                <div><dt>你来决定</dt><dd>每个积分温区、名称、稳定且防撞的 <code>--result-id</code>、负值与边界规则；<code>--peak-position</code> 才记录人工复核的 <code>Tp</code>，省略时只记录区间内最大积分响应采样点 <code>Tmax</code>。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看参数</span><code>tpdtpd integration areas --help</code></p>
+              <details class="command-details">
+                <summary>查看当前 registry 示例</summary>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd integration areas experiment.toml \
+    --input out/normalized.csv --target CO \
+    --start-c -160 --end-c -90 --interval-name peak-1 \
+    --interval peak-2 -60 20 \
+    --result-id co_integration --preview
+
+<span class="prompt">$</span> <span class="comment"># 同一样品两峰共享一个 result ID；人工确认后用同一参数去掉 --preview，正式面积进入 TOML + records/co_integration_areas.json。</span></code></pre>
+              </details>
+            </article>
+
+            <article class="command-card" id="command-peaks">
+              <header class="command-card-heading">
+                <span>04.3</span>
+                <h3><code>integration peaks</code></h3>
+              </header>
+              <p class="command-purpose">从 normalized 表与 reviewed baseline 复算基线扣除响应，在独立温区和参数假设下寻找候选峰、建议边界与可选形状诊断。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd><code>normalized.csv</code>、target、稳定的 <code>result-id</code>、basis、温区、峰数、最小间隔、总宽平滑窗和 reviewed baseline。</dd></div>
+                <div><dt>输出</dt><dd>候选摘要写入 <code>[integration_peaks.&lt;result-id&gt;]</code>，逐点证据默认写 <code>records/&lt;result-id&gt;_peaks.json</code>，审核图写在输入旁；不生成 peaks/curve CSV。谷底边界始终标记为未经审核且未用于积分。</dd></div>
+                <div><dt>你来决定</dt><dd>峰参数与最终积分区间；可选 Gaussian seeds 只做无面积的重叠形状探索。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看参数</span><code>tpdtpd integration peaks --help</code></p>
+              <details class="command-details">
+                <summary>查看当前 registry 示例</summary>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd integration peaks experiment.toml \
+    --input out/normalized.csv --target CO --result-id co_candidates \
+    --basis absolute \
+    --program-time-start-min 0 --start-c -180 --end-c 60 --count 2 \
+    --minimum-separation-c 20 --smoothing-window-c 6 \
+    --plot-output out/co_candidates_peaks.png</code></pre>
+              </details>
+            </article>
+          </div>
+        </section>
+
+        <section class="command-group" id="publish" aria-labelledby="publish-group-title">
+          <header class="command-group-heading">
+            <span class="command-group-number">05</span>
+            <div>
+              <p>review and publish</p>
+              <h2 id="publish-group-title">复核与发布</h2>
+            </div>
+            <p>图是检查和交流的产物；它不替代产生曲线时使用的参数、单位与来源记录。</p>
+          </header>
+
+          <div class="command-grid">
+            <article class="command-card" id="command-plot">
+              <header class="command-card-heading">
+                <span>05.1</span>
+                <h3><code>plot</code></h3>
+              </header>
+              <p class="command-purpose">分别复核原始 MS、温程拟合、校准区间、单实验完整定量响应，或比较多个实验的完整响应与正式峰结果；可独立调整只作用于成图的平滑、标题和字体。</p>
+              <dl class="command-contract">
+                <div><dt>输入</dt><dd>明确的数据表和图类型；<code>response</code> 读取 <code>normalized.csv</code>，还需明确 total 或 baseline-subtracted 口径及纵轴 basis；baseline-subtracted 由同一表与 TOML 中 reviewed baseline 即时复算。<code>comparison</code> 至少重复两次 <code>--series LABEL CONFIG INPUT</code>。</dd></div>
+                <div><dt>显示参数</dt><dd><code>raw</code>、<code>temperature</code>、<code>calibration</code> 用 <code>--smoothing-window-min</code>，<code>response</code>、<code>comparison</code> 用 <code>--smoothing-window-c</code>；两者都是 local-quadratic 物理总窗宽，默认 0。<code>--title auto</code> 自动命名，也可自定义；<code>--font-family auto</code> 与 <code>--font-weight auto</code> 可显式覆盖，字体不存在时拒绝静默回退。</dd></div>
+                <div><dt>输出</dt><dd><code>response</code> 默认画完整程序升温支路、核验 TOML 正式峰结果并标注当前 basis 面积，文件名含 target、response mode、basis 与 range；<code>comparison</code> 默认输出 absolute、mass-umol、BET 三面板且必须显式给新文件路径。峰位与单位以 MathText 显示真正的上下标，不依赖 LaTeX。</dd></div>
+                <div><dt>你来决定</dt><dd>画哪一种数据、物理纵轴、只用于显示的平滑总窗宽、标题、字体、是否保留正式峰标注，以及比较系列标签与输出路径。平滑不会改写 CSV/TOML，也不会改变温程拟合、校准因子、基线、正式峰位、峰面积或积分区间；自动画图和哈希核验都不等于人工科学接受。</dd></div>
+              </dl>
+              <p class="command-entry"><span>先看分支</span><code>tpdtpd plot --help</code></p>
+              <details class="command-details">
+                <summary>查看 5 个子命令与示例</summary>
+                <ul class="subcommand-list">
+                  <li><code>raw</code><span>原始质谱信号；可用 min 总窗宽平滑显示线。</span></li>
+                  <li><code>temperature</code><span>保留原始测温散点，可选增加显示平滑线；下游拟合温度不变。</span></li>
+                  <li><code>calibration</code><span>可平滑目标/内标显示线；审核区间与校准因子不变。</span></li>
+                  <li><code>response</code><span>默认完整升温支路，并从 TOML 标注经 SHA-256 验证的正式 <var>T<sub>max</sub></var>/<var>T<sub>p</sub></var> 与面积。</span></li>
+                  <li><code>comparison</code><span>多实验完整 total response 的共享温度轴多面板比较与正式面积表；每条线按自身采样间距换算同一 °C 总窗宽。</span></li>
+                </ul>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd plot response experiment.toml \
+    --input out/co/normalized.csv \
+    --response-mode total \
+    --basis mass-umol \
+    --smoothing-window-c 12 \
+    --title "CO TPD response" \
+    --font-family 'Heiti TC' \
+    --font-weight medium
+
+<span class="prompt">$</span> tpdtpd plot comparison \
+    --series Ge-ZSM-5 ge.toml ge/normalized.csv \
+    --series ZSM-5 zsm.toml zsm/normalized.csv \
+    --smoothing-window-c 12 \
+    --output co_response_comparison.png</code></pre>
+              </details>
+              <p class="command-example-warning">
+                从外部终端运行 CLI 后，在 TPX 实验处理页面选定同一实验目录和 TOML，读取工件列表。目录发现的文件与某次运行记录中的输出分开呈现；当前文件哈希一致只证明文件身份，不代表科研人员已经审核接受其基线、区间、面积或解释。
+              </p>
+            </article>
+          </div>
+        </section>
+
+      </div>
+
+      <section class="command-next shell" aria-labelledby="command-next-title">
+        <div>
+          <p class="command-eyebrow">CHOOSE YOUR DEPTH</p>
+          <h2 id="command-next-title">参考中心说明稳定边界；叶命令帮助列出全部参数。</h2>
+        </div>
+        <div class="command-next-links">
+          <a href="first-experiment.html"><span>01</span><strong>第一次使用</strong><small>完成 init → config inspect，并人工复核概况</small></a>
+          <a href="analysis-workflow.html"><span>02</span><strong>曲线分析入门</strong><small>分别复核 plot、integration areas 与 integration peaks</small></a>
+          <a href="reference.html#cli"><span>03</span><strong>CLI 参考边界</strong><small>从稳定命令地图进入真实叶命令帮助</small></a>
+          <a href="reference.html#workflow"><span>04</span><strong>科学数据路径</strong><small>理解显式步骤与人工判断边界</small></a>
+          <a href="coordinate-alignment.html"><span>05</span><strong>坐标对齐 SDK</strong><small>程序代码需要双表插值时，查看 SDK 契约、越界与诊断</small></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="wordmark" href="index.html">tpxtpxtpx</a>
+          <p>Python 3.11+ · version 0.8.0 · 当前完整命令聚焦 TPD</p>
+        </div>
+        <nav aria-label="页脚导航">
+          <a href="evidence.html">运行证据</a>
+          <a href="analysis-workflow.html">曲线分析</a>
+          <a href="commands.html" aria-current="page">命令地图</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="reference.html#cli">CLI</a>
+          <a href="sdk-quickstart.html">SDK</a>
+          <a href="reference.html#architecture">架构</a>
+          <a href="coordinate-alignment.html">坐标对齐 SDK</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="从 observed = matrix @ species 出发，学习 tpxtpxtpx 碎片矩阵的行列方向、数据形状、缺失通道策略与数值诊断。"
+    >
+    <meta name="theme-color" content="#f7f8f4">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="碎片矩阵怎么读 — tpxtpxtpx">
+    <meta
+      property="og:description"
+      content="先读行列，再求解；缺失通道不是 0 A。"
+    >
+    <title>碎片矩阵怎么读 — tpxtpxtpx</title>
+    <link rel="stylesheet" href="site.css">
+    <script src="fragmentation-guide.js" defer></script>
+  </head>
+  <body class="tutorial-page fragmentation-guide-page">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="index.html" aria-label="tpxtpxtpx 首页">tpxtpxtpx</a>
+        <nav aria-label="主导航">
+          <a href="index.html">首页</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="commands.html">命令地图</a>
+          <a href="fragmentation-guide.html" aria-current="page">矩阵指南</a>
+          <a href="evidence.html">运行证据</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="fragmentation-hero shell" aria-labelledby="fragmentation-title">
+        <div class="measure fragmentation-measure" aria-hidden="true">
+          <span>800</span>
+          <span>600</span>
+          <span>400</span>
+          <span>200</span>
+          <span>0 K</span>
+        </div>
+
+        <div class="fragmentation-hero-copy">
+          <h1 id="fragmentation-title">从观测 m/z，<br>到物种电流。</h1>
+          <p>先读行列，再求解。缺失通道不是 <code>0 A</code>。</p>
+          <div class="hero-actions" role="group" aria-label="本页入口">
+            <a class="button button-primary" href="#orientation">先读矩阵方向</a>
+            <a class="button button-secondary" href="#read-only">查看只读命令</a>
+          </div>
+          <p class="fragmentation-hero-note">
+            公开 SDK · <code>correct_fragmentation()</code> · 研究者复核矩阵与结果
+          </p>
+        </div>
+
+        <div class="matrix-console" data-orientation-matrix data-mode="all">
+          <div class="matrix-console-heading">
+            <code>observed = matrix @ species</code>
+            <span>(N, K) → (N, K)</span>
+          </div>
+          <div class="matrix-axis matrix-axis-column">列 · 待求物种</div>
+          <div class="matrix-table-wrap" tabindex="0" role="region" aria-label="符号碎片矩阵，可横向滚动">
+            <table class="orientation-matrix">
+              <caption class="visually-hidden">行对应观测 m/z，列对应待求物种的 K × K 符号矩阵</caption>
+              <thead>
+                <tr>
+                  <th scope="col">观测 \ 物种</th>
+                  <th scope="col"><var>S</var><sub>0</sub></th>
+                  <th scope="col"><var>S</var><sub>1</sub></th>
+                  <th scope="col"><var>S</var><sub>2</sub></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">m/z <var>m</var><sub>0</sub></th>
+                  <td><var>a</var><sub>00</sub></td>
+                  <td><var>a</var><sub>01</sub></td>
+                  <td><var>a</var><sub>02</sub></td>
+                </tr>
+                <tr class="matrix-focus-row">
+                  <th scope="row">m/z <var>m</var><sub>1</sub></th>
+                  <td><var>a</var><sub>10</sub></td>
+                  <td class="matrix-focus-cell"><var>a</var><sub>11</sub></td>
+                  <td><var>a</var><sub>12</sub></td>
+                </tr>
+                <tr>
+                  <th scope="row">m/z <var>m</var><sub>2</sub></th>
+                  <td><var>a</var><sub>20</sub></td>
+                  <td><var>a</var><sub>21</sub></td>
+                  <td><var>a</var><sub>22</sub></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="matrix-console-footer">
+            <div class="matrix-mode-switch" role="group" aria-label="选择矩阵阅读方式">
+              <button type="button" data-matrix-mode="all" aria-pressed="true">整体</button>
+              <button type="button" data-matrix-mode="row" aria-pressed="false">看一行</button>
+              <button type="button" data-matrix-mode="column" aria-pressed="false">看一列</button>
+            </div>
+            <p data-matrix-explanation aria-live="polite">
+              先把矩阵当成一张映射表：每一行对应一个观测 m/z，每一列对应一个待求物种。
+            </p>
+            <span>K × K</span>
+          </div>
+        </div>
+      </section>
+
+      <nav class="step-index fragmentation-step-index" aria-label="本页章节">
+        <ol class="shell">
+          <li><a href="#orientation"><span>01</span>矩阵方向</a></li>
+          <li><a href="#missing-channel"><span>02</span>缺失通道</a></li>
+          <li><a href="#diagnostics"><span>03</span>数值诊断</a></li>
+          <li><a href="#review"><span>04</span>复核清单</a></li>
+        </ol>
+      </nav>
+
+      <section class="fragmentation-orientation shell" id="orientation" aria-labelledby="orientation-title">
+        <div class="tutorial-section-offset">
+          <header class="fragmentation-section-heading">
+            <span>01</span>
+            <div>
+              <h2 id="orientation-title">先读矩阵方向</h2>
+              <p>矩阵不是一组可以交换位置的系数；行、列和输入表的顺序必须一致。</p>
+            </div>
+          </header>
+
+          <div class="orientation-explainer">
+            <div class="equation-board" role="group" aria-label="逐点矩阵方程">
+              <code><var>y</var><sub>i</sub>(t) = Σ<sub>j</sub> A<sub>ij</sub> · <var>x</var><sub>j</sub>(t)</code>
+              <dl>
+                <div>
+                  <dt><var>y</var><sub>i</sub>(t)</dt>
+                  <dd>第 <var>i</var> 个观测 m/z 在时间点 <var>t</var> 的离子电流，单位 A。</dd>
+                </div>
+                <div>
+                  <dt>A<sub>ij</sub></dt>
+                  <dd>物种 <var>j</var> 对观测通道 <var>i</var> 的响应系数；来源和适用条件必须人工确认。</dd>
+                </div>
+                <div>
+                  <dt><var>x</var><sub>j</sub>(t)</dt>
+                  <dd>程序要求解的第 <var>j</var> 个物种电流，单位 A。</dd>
+                </div>
+              </dl>
+            </div>
+
+            <ol class="shape-path" aria-label="数据形状变化">
+              <li>
+                <span>输入表</span>
+                <strong>N 行 × 多列</strong>
+                <p>N 是时间或温度坐标上的数据点数。</p>
+              </li>
+              <li>
+                <span>观测数组</span>
+                <strong>(N, K)</strong>
+                <p>K 个已配置且实际存在的观测通道。</p>
+              </li>
+              <li>
+                <span>线性求解</span>
+                <strong>(K, K) @ (K, N)</strong>
+                <p>实现先转置，再调用 <code>np.linalg.solve</code>。</p>
+              </li>
+              <li>
+                <span>物种数组</span>
+                <strong>(N, K)</strong>
+                <p>每一行仍对应原来的同一个数据点。</p>
+              </li>
+            </ol>
+          </div>
+
+          <div class="science-note">
+            <strong>物理边界</strong>
+            <p>
+              数值求解只回答“在这张矩阵假设下，哪些物种电流能重建观测电流”。它不自动证明物种指认、系数来源或反应机理正确。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell fragmentation-missing" id="missing-channel" aria-labelledby="missing-channel-title">
+        <div class="step-marker" aria-hidden="true"><span>02</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>02</span>
+            <div>
+              <h2 id="missing-channel-title">缺失一行，也要删除配对的一列</h2>
+              <p>默认严格失败；只有研究者显式选择 <code>available</code>，程序才求解剩余主子矩阵。</p>
+            </div>
+          </header>
+
+          <div class="policy-demo" data-policy-demo data-policy="error">
+            <div class="policy-demo-heading">
+              <div class="policy-switch" role="group" aria-label="选择缺失观测策略">
+                <button type="button" data-policy-mode="error" aria-pressed="true">
+                  <span>error</span>默认严格
+                </button>
+                <button type="button" data-policy-mode="available" aria-pressed="false">
+                  <span>available</span>显式降维
+                </button>
+              </div>
+              <strong>available ≠ 用 <code>0 A</code> 补值</strong>
+            </div>
+
+            <figure class="fixture-matrix" aria-labelledby="fixture-matrix-title">
+              <figcaption id="fixture-matrix-title">
+                <strong>公开回归测试中的最小算例</strong>
+                <span><code>tests/test_public_sdk.py</code> · 不是实验测量</span>
+              </figcaption>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="三乘三回归测试矩阵，可横向滚动">
+                <table>
+                  <caption class="visually-hidden">行是观测 m/z、列是配置物种的三乘三公开回归测试矩阵</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">行 · 观测 m/z</th>
+                      <th scope="col">H2</th>
+                      <th scope="col" class="skipped-pair">m14_unassigned</th>
+                      <th scope="col">H2O</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">m/z 2</th>
+                      <td>1.0</td>
+                      <td class="skipped-pair">0.2</td>
+                      <td>0.1</td>
+                    </tr>
+                    <tr class="skipped-pair">
+                      <th scope="row">m/z 14 · 缺失</th>
+                      <td>0.0</td>
+                      <td>1.0</td>
+                      <td>0.3</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">m/z 18</th>
+                      <td>0.4</td>
+                      <td class="skipped-pair">0.5</td>
+                      <td>2.0</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </figure>
+
+            <div class="policy-result policy-result-error" data-policy-result="error" aria-live="polite">
+              <span>默认结果</span>
+              <strong>停止，不写出求解结果</strong>
+              <code>DataError: … missing observed column(s): m14_raw</code>
+              <p>缺失通道保持缺失；程序不会悄悄插入 <code>0 A</code>。</p>
+            </div>
+
+            <div class="policy-result policy-result-available" data-policy-result="available" aria-live="polite" hidden>
+              <span>显式结果</span>
+              <strong>删除 m/z 14 行与 m14_unassigned 列</strong>
+              <code>[[1.0, 0.1], [0.4, 2.0]] @ [3.0, 5.0] A = [3.5, 11.2] A</code>
+              <dl>
+                <div><dt>solution_mode</dt><dd><code>available-principal-submatrix</code></dd></div>
+                <div><dt>skipped pair</dt><dd><code>m/z 14 ↔ m14_unassigned</code></dd></div>
+                <div><dt>condition_number</dt><dd><code>2.178783356667508</code>（实际 2 × 2 主子矩阵）</dd></div>
+                <div><dt>configured_condition_number</dt><dd><code>2.5406184240199563</code>（原始 3 × 3 配置矩阵）</dd></div>
+                <div><dt>ignored_coupling_max_abs</dt><dd><code>0.5</code></dd></div>
+              </dl>
+            </div>
+
+            <noscript>
+              <p class="noscript-note">当前浏览器未运行 JavaScript；页面保留默认严格策略。显式主子矩阵的关键诊断仍在下方解释。</p>
+            </noscript>
+          </div>
+
+          <aside class="partial-solution-note">
+            <strong>available 是模型假设</strong>
+            <p>
+              代码同时删去缺失观测行及同位置物种列，相当于假设被跳过物种对保留观测的贡献为零。<code>ignored_coupling_max_abs</code> 把被忽略耦合的最大绝对系数暴露出来，但不会替研究者判定这个假设是否可接受。
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell fragmentation-diagnostic-section" id="diagnostics" aria-labelledby="diagnostics-title">
+        <div class="step-marker" aria-hidden="true"><span>03</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>03</span>
+            <div>
+              <h2 id="diagnostics-title">求解成功，不等于物理解释正确</h2>
+              <p>先检查数值诊断，再判断物种归属。</p>
+            </div>
+          </header>
+
+          <div class="diagnostic-workbench">
+            <dl class="fragmentation-diagnostics">
+              <div>
+                <dt><code>condition_number</code></dt>
+                <dd><strong>实际求解矩阵</strong><p>SDK 对本次真正送入求解器的矩阵计算该值；<code>available</code> 模式下就是保留的主子矩阵。<code>maximum_condition_number</code> 只检查这个值；通过阈值也不等于物理模型正确。</p></dd>
+              </div>
+              <div>
+                <dt><code>configured_condition_number</code></dt>
+                <dd><strong>原始完整矩阵</strong><p>SDK 同时保留完整配置矩阵的条件数，便于与降维求解比较。只读 <code>fragmentation show</code> 中名为 <code>condition_number</code> 的字段也是这个完整矩阵含义。</p></dd>
+              </div>
+              <div>
+                <dt><code>solution_mode</code></dt>
+                <dd><strong>求解范围</strong><p>确认本次使用完整矩阵，还是显式删除配对行列后的主子矩阵。</p></dd>
+              </div>
+              <div>
+                <dt><code>ignored_coupling_max_abs</code></dt>
+                <dd><strong>降维代价</strong><p>只在部分求解时解释被忽略的耦合上限；值为零也不能替代实验判断。</p></dd>
+              </div>
+              <div>
+                <dt>负物种电流</dt>
+                <dd><strong>需要解释，不自动裁零</strong><p>可能来自配对缺失、噪声、基线、系数或模型外过程；SDK 保留求解值供复核。</p></dd>
+              </div>
+            </dl>
+
+            <div class="diagnostic-code-stack" id="read-only">
+              <p class="call-chain">DataFrame (N, M) <span>→</span> <code>resolve_mass_signals</code> <span>→</span> observed (N, K) <span>→</span> <code>np.linalg.solve</code> <span>→</span> FragmentationResult</p>
+
+              <figure class="code-window command-window" aria-labelledby="fragmentation-show-title">
+                <figcaption class="terminal-bar" id="fragmentation-show-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  只读查看配置矩阵
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd fragmentation show experiment.toml</code></pre>
+              </figure>
+              <p class="code-note">先查看行列标签、系数、完整配置矩阵的条件数和来源；<code>show</code> 不读取也不求解信号表。</p>
+
+              <figure class="code-window command-window" aria-labelledby="fragmentation-sdk-title">
+                <figcaption class="terminal-bar" id="fragmentation-sdk-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  Python 公共 SDK · 调用片段
+                </figcaption>
+                <pre tabindex="0"><code><span class="comment"># frame：研究者已加载并检查的 DataFrame</span>
+<span class="comment"># settings：研究者已构建并复核的 FragmentationSettings</span>
+<span class="keyword">from</span> <span class="command">tpx</span> <span class="keyword">import</span> correct_fragmentation
+
+result = correct_fragmentation(
+    frame,
+    settings,
+    missing_observed=<span class="string">"error"</span>,
+)</code></pre>
+              </figure>
+              <p class="code-note">SDK 接收内存中的 <code>DataFrame</code> 与设置对象；它不读取 TOML，也不替你选择矩阵。纯 SDK 或无父记录 CLI 可以完成数值求解，但不会凭空获得 calibration / quantify 所需的 artifact role 与受控父链。</p>
+            </div>
+          </div>
+
+          <details class="call-path">
+            <summary>查看真实调用路径</summary>
+            <p>
+              SDK：<code>tpx.fragmentation.correct_fragmentation()</code> → <code>resolve_mass_signals()</code> → <code>np.linalg.solve()</code> → <code>fragmentation_stage_frame()</code> → <code>FragmentationResult</code>。
+            </p>
+            <p>
+              只读 CLI：<code>tpxtpx.tpdtpd.fragmentation.execute()</code> → <code>load_experiment_config()</code> → 输出矩阵与诊断。CLI 负责参数和文件适配，矩阵求解仍在 <code>tpx</code> SDK。
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <section class="review-checklist fragmentation-review" id="review" aria-labelledby="review-title">
+        <div class="shell">
+          <h2 id="review-title">运行前后，逐项复核</h2>
+          <ul>
+            <li><span>01</span><strong>行标签</strong><p><code>masses_amu</code> 的顺序与实际观测列完全一致。</p></li>
+            <li><span>02</span><strong>列标签</strong><p><code>species</code> 的顺序与矩阵每一列的物种含义完全一致。</p></li>
+            <li><span>03</span><strong>系数来源</strong><p>记录矩阵来自哪次标定、哪套仪器状态和哪些适用条件。</p></li>
+            <li><span>04</span><strong>矩阵条件</strong><p>检查奇异性、条件数与自定上限；不要把“可求解”等同于“可信”。</p></li>
+            <li><span>05</span><strong>缺失策略</strong><p>默认 <code>error</code>；若用 <code>available</code>，逐项查看跳过行列与被忽略耦合。</p></li>
+            <li><span>06</span><strong>输出电流</strong><p>检查负值、异常幅度与可重建性；不要自动裁零或直接做物种归属。</p></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="tutorial-finish fragmentation-finish" aria-labelledby="fragmentation-finish-title">
+        <div class="shell">
+          <h2 id="fragmentation-finish-title">先看矩阵，再解释物种。</h2>
+          <p>完整采集的碎片输出可进入 calibration；已对齐的脱附输出可在匹配受控来源链后进入 quantify。文件名相似不等于 provenance 门禁已经满足。</p>
+          <div>
+            <a class="button button-primary" href="commands.html#command-fragmentation">回到碎片校正命令</a>
+            <a class="button button-secondary" href="commands.html#command-calibration">完整采集：校准</a>
+            <a class="button button-secondary" href="commands.html#command-quantify">脱附支路：定量</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="wordmark" href="index.html">tpxtpxtpx</a>
+          <p>Python 3.11+ · version 0.8.0 · observed-by-species matrix</p>
+        </div>
+        <nav aria-label="页脚导航">
+          <a href="fragmentation-guide.html" aria-current="page">矩阵指南</a>
+          <a href="evidence.html">运行证据</a>
+          <a href="commands.html">命令地图</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="sdk-quickstart.html">SDK 入门</a>
+          <a href="reference.html">技术参考</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

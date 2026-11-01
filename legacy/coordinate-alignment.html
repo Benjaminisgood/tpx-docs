@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="用两张最小 CSV 学习 tpxtpxtpx 的通用坐标对齐：左表保留行，右表按 numeric 或 datetime 坐标线性插值，越界、重叠与覆盖策略全部显式。"
+    >
+    <meta name="theme-color" content="#f7f8f4">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="通用坐标对齐 — tpxtpxtpx">
+    <meta
+      property="og:description"
+      content="左表定行，右表供值；先声明坐标与边界，再做线性插值。"
+    >
+    <title>通用坐标对齐 — tpxtpxtpx</title>
+    <link rel="stylesheet" href="site.css">
+  </head>
+  <body class="tutorial-page analysis-page coordinate-alignment-page">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="index.html" aria-label="tpxtpxtpx 首页">tpxtpxtpx</a>
+        <nav aria-label="主导航">
+          <a href="index.html">首页</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="commands.html">命令地图</a>
+          <a href="coordinate-alignment.html" aria-current="page">坐标对齐 SDK</a>
+          <a href="reference.html">技术参考</a>
+          <a href="evidence.html">运行证据</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="tutorial-hero shell" aria-labelledby="alignment-title">
+        <div class="measure tutorial-measure" aria-hidden="true">
+          <span>left</span>
+          <span>right</span>
+          <span>map</span>
+          <span>policy</span>
+          <span>output</span>
+        </div>
+
+        <div class="tutorial-hero-copy">
+          <p class="analysis-eyebrow">GENERAL TABLE ALIGNMENT · NUMERIC / DATETIME</p>
+          <h1 id="alignment-title"><span class="tutorial-title-lead">左表定行，</span> <span class="tutorial-title-tail">右表供值。</span></h1>
+          <p>
+            <code>align_by_coordinate()</code> 只做一件事：沿两张 DataFrame 各自声明的坐标，把右表一个或多个数值列线性插值到左表。它不会猜列、排序数据或替研究者选择越界行为。这是 Python SDK 算子，不是 <code>temperature align</code> 的双时钟与温程模型流程，也不再作为顶层 <code>tpdtpd align</code> CLI 暴露。
+          </p>
+          <div class="hero-actions" role="group" aria-label="通用坐标对齐入口">
+            <a class="button button-primary" href="#minimal-example">先看最小 SDK 算例</a>
+            <a class="button button-secondary" href="sdk-quickstart.html">回到 SDK 入门</a>
+          </div>
+        </div>
+
+        <ul class="tutorial-outcomes" aria-label="本页解释的三个对齐边界">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M7 8h10M7 12h6M7 16h10"></path>
+            </svg>
+            <span>左表是输出行基准</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m6 16 4-5 3 2 5-6"></path>
+            </svg>
+            <span>右表数值列线性插值</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 6v7M12 17.5v.5"></path>
+            </svg>
+            <span>边界与覆盖必须明示</span>
+          </li>
+        </ul>
+      </section>
+
+      <nav class="step-index" aria-label="本页步骤">
+        <ol class="shell">
+          <li><a href="#minimal-example"><span>00</span>最小算例</a></li>
+          <li><a href="#coordinate-contract"><span>01</span>坐标契约</a></li>
+          <li><a href="#policy-table"><span>02</span>边界策略</a></li>
+          <li><a href="#cli-sdk"><span>03</span>SDK 调用</a></li>
+        </ol>
+      </nav>
+
+      <section class="tutorial-prep shell" id="minimal-example" aria-labelledby="minimal-example-title">
+        <div class="tutorial-section-offset">
+          <header class="tutorial-section-heading">
+            <h2 id="minimal-example-title">先看一组能手算的插值</h2>
+            <p>下面的两张表来自公开回归测试。左表有两个采样点；右表有三个控制器点，并提供温度与压力两个待插值列。</p>
+          </header>
+
+          <div class="analysis-question-map" role="group" aria-label="通用坐标对齐的数据方向">
+            <div class="analysis-source">
+              <span>输出基准</span>
+              <strong>left.csv · 2 行</strong>
+              <p>保留左表列与行顺序。</p>
+            </div>
+            <ol>
+              <li><span>01</span><strong>声明坐标</strong><code>sample_time ↔ controller_time</code></li>
+              <li><span>02</span><strong>声明映射</strong><code>RIGHT_COL:OUTPUT_COL</code></li>
+              <li><span>03</span><strong>得到副本</strong><code>left + interpolated columns</code></li>
+            </ol>
+          </div>
+
+          <div class="prep-grid analysis-input-grid">
+            <div class="input-spec">
+              <h3><code>left.csv</code> · 行基准</h3>
+              <p><code>sample_time</code> 是目标坐标；<code>signal</code> 原样保留。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="左表最小算例，可横向滚动">
+                <table>
+                  <thead>
+                    <tr><th scope="col">sample_time</th><th scope="col">signal</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>0.5</td><td>4.0</td></tr>
+                    <tr><td>1.5</td><td>8.0</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="input-spec">
+              <h3><code>right.csv</code> · 插值来源</h3>
+              <p><code>controller_time</code> 是来源坐标；只插值显式选择的数值列。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="右表最小算例，可横向滚动">
+                <table>
+                  <thead>
+                    <tr><th scope="col">controller_time</th><th scope="col">temperature</th><th scope="col">pressure</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>0.0</td><td>0.0</td><td>1.0</td></tr>
+                    <tr><td>1.0</td><td>10.0</td><td>3.0</td></tr>
+                    <tr><td>2.0</td><td>20.0</td><td>5.0</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <figure class="code-window install-command analysis-command" aria-labelledby="minimal-command-title">
+            <figcaption class="terminal-bar" id="minimal-command-title">
+              <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+              Python SDK · 两列一次对齐
+            </figcaption>
+            <pre tabindex="0"><code><span class="keyword">from</span> <span class="command">tpx</span> <span class="keyword">import</span> AlignmentSpec, align_by_coordinate
+
+result = align_by_coordinate(
+    left,
+    right,
+    AlignmentSpec(
+        left_coordinate=<span class="string">"sample_time"</span>,
+        right_coordinate=<span class="string">"controller_time"</span>,
+        right_values={
+            <span class="string">"temperature"</span>: <span class="string">"temperature_interp"</span>,
+            <span class="string">"pressure"</span>: <span class="string">"pressure_interp"</span>,
+        },
+    ),
+)
+aligned = result.frame</code></pre>
+          </figure>
+
+          <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="最小算例输出，可横向滚动">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">sample_time</th>
+                  <th scope="col">signal</th>
+                  <th scope="col">temperature_interp</th>
+                  <th scope="col">pressure_interp</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>0.5</td><td>4.0</td><td>5.0</td><td>2.0</td></tr>
+                <tr><td>1.5</td><td>8.0</td><td>15.0</td><td>4.0</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="analysis-table-note">例如 <code>sample_time = 0.5</code> 位于右表 0 与 1 的正中，所以温度得到 5、压力得到 2。没有单位转换，也没有额外平滑。</p>
+
+          <aside class="science-note">
+            <strong>科学边界</strong>
+            <p>线性插值只建立数值对应关系。两列是否代表可比较的物理坐标、单位是否一致、采样之间是否允许线性近似，仍由研究者确认。</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="coordinate-contract" aria-labelledby="coordinate-contract-title">
+        <div class="step-marker" aria-hidden="true"><span>01</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>01</span>
+            <div>
+              <h2 id="coordinate-contract-title">先满足坐标契约，再谈插值</h2>
+              <p>SDK 对 numeric 与 datetime 使用同一组明确约束；不会先排序、去重或默默修复输入。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <dl class="effect-list">
+                <div><dt>类型一致</dt><dd>两侧都必须是 numeric，或两侧都是 datetime；timezone-aware 与 timezone-naive 也不能混用。</dd></div>
+                <div><dt>严格递增</dt><dd>左右坐标都不能倒退或重复。输入顺序就是被审查的数据事实。</dd></div>
+                <div><dt>右表最少两点</dt><dd>线性插值来源至少需要两个坐标点。</dd></div>
+                <div><dt>来源值有限</dt><dd>每个右表待插值列必须是 numeric，并且不含 NaN 或无穷值。</dd></div>
+                <div><dt>输入不原地修改</dt><dd><code>align_by_coordinate()</code> 返回左表副本与诊断；调用者传入的 DataFrame 保持不变。</dd></div>
+              </dl>
+
+              <div class="analysis-formulas" role="group" aria-label="对齐契约的三个核心量">
+                <div>
+                  <span>坐标</span>
+                  <code>left[x_left] ↔ right[x_right]</code>
+                  <p>同类、有限、严格递增。</p>
+                </div>
+                <div>
+                  <span>映射</span>
+                  <code>right_values = {source: output}</code>
+                  <p>至少一个，输出名唯一。</p>
+                </div>
+                <div>
+                  <span>结果</span>
+                  <code>AlignmentResult(frame, diagnostics)</code>
+                  <p>新表与本次边界诊断分开保存。</p>
+                </div>
+              </div>
+
+              <details class="call-path">
+                <summary>为什么 datetime 先减右表起点？</summary>
+                <p>实现先把两侧坐标减去右表起点，再把 datetime 纳秒差换成秒后插值，避免把巨大绝对时间戳直接转成浮点数造成精度损失。</p>
+                <p>这一步只改善数值表示，不改变时区语义，也不会接受 aware / naive 混用。</p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>运行前检查</h3>
+              <ul>
+                <li>两侧坐标单位或 datetime 语义相同。</li>
+                <li>坐标已经按实验事实严格递增。</li>
+                <li>右表列确实允许线性插值。</li>
+                <li>输出列名不会掩盖原始测量。</li>
+              </ul>
+              <p>SDK 不恢复 CSV 类型；调用者必须先把两侧坐标准备为同类 numeric 或 datetime dtype，并自行确认物理语义。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="policy-table" aria-labelledby="policy-table-title">
+        <div class="step-marker" aria-hidden="true"><span>02</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>02</span>
+            <div>
+              <h2 id="policy-table-title">越界不是细节，是输出语义</h2>
+              <p>左表坐标落在右表范围之外时，四种策略会改变输出语义；SDK 默认严格报错，仅在复核覆盖关系后显式改用其他策略。</p>
+            </div>
+          </header>
+
+          <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="越界策略对比，可横向滚动">
+            <table>
+              <thead>
+                <tr><th scope="col">策略</th><th scope="col">左表越界行</th><th scope="col">插值列</th><th scope="col">适合回答的问题</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>error</code></td><td>不输出</td><td>不输出</td><td>所有左表行都必须有右表覆盖；最严格。</td></tr>
+                <tr><td><code>drop</code></td><td>删除</td><td>只计算范围内行</td><td>只保留两侧共同坐标范围。</td></tr>
+                <tr><td><code>nan</code></td><td>保留</td><td>越界位置写 NaN</td><td>保留左表形状，同时显式标出没有插值值。</td></tr>
+                <tr><td><code>clip</code></td><td>保留</td><td>使用最近右表端点值</td><td>研究者明确接受端点常值延伸。</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="output-modes">
+            <div>
+              <h3><code>OverlapPolicy.REQUIRE</code></h3>
+              <p>左右范围完全不相交时立即失败；这是 SDK 默认重叠策略。</p>
+            </div>
+            <div>
+              <h3><code>OverlapPolicy.ALLOW_EMPTY</code></h3>
+              <p>只允许继续应用越界策略。例如配合 <code>drop</code> 得到结构明确的空表；它不会自动取消 <code>error</code>。</p>
+            </div>
+          </div>
+
+          <div class="output-modes">
+            <div>
+              <h3>默认不覆盖</h3>
+              <p>省略覆盖选项时，输出名与左表已有列冲突就拒绝运行。</p>
+            </div>
+            <div>
+              <h3><code>allow_overwrite=True</code></h3>
+              <p>只在研究者明确要用插值值替换同名左表列时使用；左坐标列本身始终不能被覆盖。</p>
+            </div>
+          </div>
+
+          <aside class="science-note">
+            <strong>不要混淆</strong>
+            <p><code>clip</code> 是端点常值，不是线性外推；<code>nan</code> 是明确缺失，不是 <code>0</code>；<code>allow-empty</code> 是无重叠许可，不是自动生成有意义的数据。</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="cli-sdk" aria-labelledby="cli-sdk-title">
+        <div class="step-marker" aria-hidden="true"><span>03</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>03</span>
+            <div>
+              <h2 id="cli-sdk-title">一个明确的 SDK 入口</h2>
+              <p>SDK 接收调用者已经加载并准备好 dtype 的 DataFrame。通用 CSV 适配 CLI 已移除；插值与科学校验集中在 <code>tpx.alignment</code>，温程专用流程也复用这一个算子。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="code-window command-window" aria-labelledby="alignment-sdk-title">
+                <figcaption class="terminal-bar" id="alignment-sdk-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  Python SDK · DataFrame 已由研究者加载
+                </figcaption>
+                <pre tabindex="0"><code><span class="keyword">from</span> <span class="command">tpx</span> <span class="keyword">import</span> AlignmentSpec, align_by_coordinate
+
+result = align_by_coordinate(
+    left,
+    right,
+    AlignmentSpec(
+        left_coordinate=<span class="string">"sample_time"</span>,
+        right_coordinate=<span class="string">"controller_time"</span>,
+        right_values={
+            <span class="string">"temperature"</span>: <span class="string">"temperature_interp"</span>,
+            <span class="string">"pressure"</span>: <span class="string">"pressure_interp"</span>,
+        },
+    ),
+)
+
+aligned = result.frame
+diagnostics = dict(result.diagnostics)</code></pre>
+              </figure>
+
+              <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="对齐诊断字段，可横向滚动">
+                <table>
+                  <thead>
+                    <tr><th scope="col">诊断</th><th scope="col">说明</th><th scope="col">复核用途</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>coordinate_kind</code></td><td><code>numeric</code> 或 <code>datetime</code></td><td>确认实际解析类型。</td></tr>
+                    <tr><td><code>left_rows / right_rows / output_rows</code></td><td>两侧输入与输出行数</td><td>识别 <code>drop</code> 是否改变行数。</td></tr>
+                    <tr><td><code>out_of_bounds_rows</code></td><td>左表越界点数</td><td>量化边界影响。</td></tr>
+                    <tr><td><code>left_range / right_range / overlap_range</code></td><td>坐标范围与交集</td><td>核对覆盖是否符合实验预期。</td></tr>
+                    <tr><td><code>out_of_bounds_policy / overlap_policy</code></td><td>本次实际策略</td><td>让结果语义随报告可见。</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <details class="call-path">
+                <summary>查看真实调用路径</summary>
+                <p><code>caller → tpx.alignment.align_by_coordinate() → AlignmentResult(frame, diagnostics)</code></p>
+                <p><code>tpdtpd temperature align</code> 仍通过温程模型与双时钟专用流程调用这个 SDK 算子；它负责自己的文件、ProcessingRecord 与完成报告，不能由通用两表插值替代。</p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>SDK 调用边界</h3>
+              <ul>
+                <li><code>right_values</code> 的来源列和输出名都必须唯一。</li>
+                <li>SDK 不读取或写入 CSV，也不创建 ProcessingRecord；文件与谱系由具体调用者负责。</li>
+                <li>越界默认 <code>ERROR</code>、重叠默认 <code>REQUIRE</code>，并默认拒绝覆盖左表已有列。</li>
+                <li>坐标 dtype 必须由调用者显式准备，SDK 不提供 <code>auto</code> 类型恢复。</li>
+                <li>返回值同时包含新的 DataFrame 副本和本次边界诊断。</li>
+              </ul>
+              <p>完整参数以当前环境中 <code>AlignmentSpec</code> 与 <code>align_by_coordinate()</code> 的 Python API 为准。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="review-checklist shell" aria-labelledby="alignment-checklist-title">
+        <div class="tutorial-section-offset">
+          <h2 id="alignment-checklist-title">写出之前，逐项确认</h2>
+          <ul>
+            <li><span>01</span><strong>行基准</strong><p>左表为何是应保留的采样坐标已经说清。</p></li>
+            <li><span>02</span><strong>坐标语义</strong><p>两侧类型、单位、时区与单调性可以直接比较。</p></li>
+            <li><span>03</span><strong>插值列</strong><p>只选择允许线性插值且有限的右表数值列。</p></li>
+            <li><span>04</span><strong>越界策略</strong><p><code>error / drop / nan / clip</code> 的物理含义已人工接受。</p></li>
+            <li><span>05</span><strong>列覆盖</strong><p>默认拒绝同名覆盖；显式覆盖有可解释理由。</p></li>
+            <li><span>06</span><strong>诊断记录</strong><p>行数、范围、越界点和实际策略随结果一起复核。</p></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="diagnostics shell" aria-labelledby="alignment-errors-title">
+        <div class="tutorial-section-offset">
+          <header class="tutorial-section-heading">
+            <h2 id="alignment-errors-title">常见拒绝是在保护什么</h2>
+            <p>先修正表格契约或研究决定；不要靠排序、填零或改列名把错误藏起来。</p>
+          </header>
+          <div class="diagnostic-list">
+            <details>
+              <summary><code>alignment coordinate contains duplicates</code></summary>
+              <p>同一个坐标对应多行，线性插值来源不再唯一。先回到采集或预处理决定如何处理重复点。</p>
+            </details>
+            <details>
+              <summary><code>alignment coordinate must be strictly increasing</code></summary>
+              <p>输入坐标倒退。函数不会自动排序，因为排序可能掩盖采集顺序或时钟重置。</p>
+            </details>
+            <details>
+              <summary><code>coordinate types differ</code></summary>
+              <p>一侧是 numeric、另一侧是 datetime。明确共同坐标后再运行，不做隐式单位转换。</p>
+            </details>
+            <details>
+              <summary><code>point(s) fall outside the right range</code></summary>
+              <p>当前选择了严格 <code>error</code>。检查范围后，只有研究者明确接受时才改用 <code>drop</code>、<code>nan</code> 或 <code>clip</code>。</p>
+            </details>
+            <details>
+              <summary><code>output column(s) already exist in the left table</code></summary>
+              <p>默认不覆盖左表已有列。为插值列使用新名字，或在确认覆盖语义后设置 <code>allow_overwrite=True</code>。</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-finish shell" aria-labelledby="alignment-finish-title">
+        <h2 id="alignment-finish-title">先声明边界，再连接两张表。</h2>
+        <p>通用对齐提供可检查的坐标变换，不替代温程模型、实验同步或任何具体科研流程。</p>
+        <div>
+          <a class="button button-primary" href="sdk-quickstart.html">查看 SDK 入门</a>
+          <a class="button button-secondary" href="temperature-alignment.html">区别温程专用对齐</a>
+          <a class="button button-secondary" href="evidence.html#current-contract">核对接口证据</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="wordmark" href="index.html">tpxtpxtpx</a>
+          <p>Python 3.11+ · version 0.8.0 · numeric / datetime linear alignment</p>
+        </div>
+        <nav aria-label="页脚导航">
+          <a href="coordinate-alignment.html" aria-current="page">坐标对齐 SDK</a>
+          <a href="sdk.md">Python SDK 参考</a>
+          <a href="temperature-alignment.html">温程对齐</a>
+          <a href="sdk-quickstart.html">SDK 入门</a>
+          <a href="reference.html">技术参考</a>
+          <a href="evidence.html">运行证据</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

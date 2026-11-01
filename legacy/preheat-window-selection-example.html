@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="历史 tpdtpd 0.6 #2/#3 CO-TPD 方法审计：保留已退役 preheat 窗口、实际入选点、信号层级与 mean/median 的对照证据，不作为当前命令指南。"
+    >
+    <meta name="theme-color" content="#f7f8f4">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="历史 Preheat 窗口选择审计 — tpxtpxtpx">
+    <meta
+      property="og:description"
+      content="CLI 不会消除科研选择；手工表格也不天然有误。先对齐处理合同，再比较结果。"
+    >
+    <title>历史 Preheat 窗口选择审计 — tpxtpxtpx</title>
+    <link rel="stylesheet" href="site.css">
+    <style>
+      .preheat-audit-page .tutorial-hero h1 {
+        max-width: 20ch;
+      }
+
+      .preheat-audit-page .step-index ol {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .audit-equation {
+        margin-top: 2rem;
+        padding: clamp(1.2rem, 3vw, 1.8rem);
+        color: var(--night-text);
+        border-left: 3px solid var(--signal);
+        background: var(--night);
+      }
+
+      .audit-equation span,
+      .audit-equation code,
+      .audit-equation small {
+        display: block;
+      }
+
+      .audit-equation span {
+        color: #c5d5d0;
+        font: 0.75rem/1.4 var(--mono);
+        letter-spacing: 0.05em;
+      }
+
+      .audit-equation code {
+        margin-top: 0.75rem;
+        color: var(--signal);
+        font-size: clamp(0.9rem, 1.6vw, 1.15rem);
+        line-height: 1.7;
+        overflow-wrap: anywhere;
+      }
+
+      .audit-equation small {
+        margin-top: 0.75rem;
+        color: #c5d5d0;
+        line-height: 1.6;
+      }
+
+      .audit-figure {
+        margin: 2rem 0 0;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.58);
+      }
+
+      .audit-figure img {
+        display: block;
+        width: 100%;
+        height: auto;
+        background: #fff;
+      }
+
+      .audit-figure > figcaption {
+        padding: 1rem 1.25rem;
+        color: var(--muted);
+        border-top: 1px solid var(--line);
+        font-size: 0.88rem;
+        line-height: 1.65;
+      }
+
+      .audit-figure > figcaption strong {
+        color: var(--ink);
+      }
+
+      .figure-reading-guide {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 1rem;
+        border-block: 1px solid var(--line);
+      }
+
+      .figure-reading-guide > div {
+        min-width: 0;
+        padding: 1.15rem 1.25rem;
+      }
+
+      .figure-reading-guide > div + div {
+        border-left: 1px solid var(--line);
+      }
+
+      .figure-reading-guide span,
+      .figure-reading-guide strong {
+        display: block;
+      }
+
+      .figure-reading-guide span {
+        color: var(--brand);
+        font: 0.74rem/1.35 var(--mono);
+        letter-spacing: 0.05em;
+      }
+
+      .figure-reading-guide strong {
+        margin-top: 0.55rem;
+        font-size: 0.95rem;
+        line-height: 1.55;
+      }
+
+      .audit-subsection {
+        margin-top: 2.5rem;
+      }
+
+      .audit-subsection h3 {
+        margin: 0;
+        font-size: clamp(1.45rem, 2.5vw, 2rem);
+        letter-spacing: -0.025em;
+      }
+
+      .audit-subsection > p {
+        max-width: 58rem;
+        color: var(--muted);
+      }
+
+      .audit-check-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin: 2rem 0 0;
+        padding: 0;
+        border-top: 1px solid var(--ink);
+        list-style: none;
+      }
+
+      .audit-check-grid li {
+        display: grid;
+        grid-template-columns: 2.5rem minmax(0, 1fr);
+        gap: 0.3rem 1rem;
+        padding: 1.2rem 1rem;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .audit-check-grid li:nth-child(odd) {
+        border-right: 1px solid var(--line);
+      }
+
+      .audit-check-grid span {
+        grid-row: 1 / span 2;
+        color: var(--brand);
+        font: 0.8rem/1.65 var(--mono);
+      }
+
+      .audit-check-grid p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 46rem) {
+        .preheat-audit-page .tutorial-title-tail {
+          white-space: normal;
+        }
+
+        .figure-reading-guide,
+        .audit-check-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .figure-reading-guide > div + div {
+          border-top: 1px solid var(--line);
+          border-left: 0;
+        }
+
+        .audit-check-grid li:nth-child(odd) {
+          border-right: 0;
+        }
+      }
+    </style>
+  </head>
+  <body class="tutorial-page analysis-page case-study-page preheat-audit-page">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="index.html" aria-label="tpxtpxtpx 首页">tpxtpxtpx</a>
+        <nav aria-label="主导航">
+          <a href="index.html">首页</a>
+          <a href="commands.html">命令地图</a>
+          <a href="co-tpd-2wxq-example.html">#2WXQ 实战</a>
+          <a href="preheat-window-selection-example.html" aria-current="page">历史 Preheat 审计</a>
+          <a href="reference.html">技术参考</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="tutorial-hero shell" aria-labelledby="audit-title">
+        <div class="measure tutorial-measure" aria-hidden="true">
+          <span>−5</span>
+          <span>64</span>
+          <span>51</span>
+          <span>pA</span>
+          <span>review</span>
+        </div>
+
+        <div class="tutorial-hero-copy">
+          <p class="analysis-eyebrow">HISTORICAL TPX 0.6 · METHOD-CONTRACT AUDIT</p>
+          <h1 id="audit-title"><span class="tutorial-title-lead">历史 Preheat 窗口：</span> <span class="tutorial-title-tail">先对齐选择，再比较工具</span></h1>
+          <p>
+            这个 #2/#3 真实案例说明：CLI 不会自动消除窗口选择、点数、信号层级和统计量中的研究者判断；人工表格也不天然不可靠。真正应比较的是两边实际执行的处理合同。
+          </p>
+          <aside class="science-note">
+            <strong>历史 0.6 方法页</strong>
+            <p>
+              本页保留的是已经退役的 <code>preheat</code> 命令与历史数值审计，不能复制为当前
+              <code>tpdtpd 0.8.0</code> 命令。当前若确有升温前目标响应归零依据，应在
+              <code>fragmentation correct</code> 后使用
+              <code>response_zeroing estimate → 人工检查 → apply</code>；真空合同仍只负责逐
+              AMU 电流。
+            </p>
+          </aside>
+          <div class="hero-actions" role="group" aria-label="案例入口">
+            <a class="button button-primary" href="#visual-evidence">先看窗口对比图</a>
+            <a class="button button-secondary" href="#shared-checks">查看共同检查清单</a>
+          </div>
+        </div>
+
+        <ul class="tutorial-outcomes" aria-label="案例核心结论">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m7.5 12 3 3 6-7"></path>
+            </svg>
+            <span>#2 同 64 点、同 median，所以重合</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M6 16h12M7 14l3-4 3 2 4-6"></path>
+            </svg>
+            <span>#3 手工多扣 0.2615686 pA</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M7 12h10M12 7v10"></path>
+            </svg>
+            <span>差异先称处理合同差异，不直接称手工误差</span>
+          </li>
+        </ul>
+      </section>
+
+      <nav class="step-index" aria-label="本页章节">
+        <ol class="shell">
+          <li><a href="#contract"><span>00</span>定义与口径</a></li>
+          <li><a href="#visual-evidence"><span>01</span>#2/#3 证据</a></li>
+          <li><a href="#sensitivity"><span>02</span>敏感性与传播</a></li>
+          <li><a href="#shared-checks"><span>03</span>共同选择点</a></li>
+          <li><a href="#audit-record"><span>04</span>留痕与合同</a></li>
+        </ol>
+      </nav>
+
+      <section class="tutorial-prep shell" id="contract" aria-labelledby="contract-title">
+        <div class="tutorial-section-offset">
+          <header class="tutorial-section-heading">
+            <h2 id="contract-title">结论不是工具之争，而是处理合同。</h2>
+            <p>
+              #2 证明同一 preheat 规则可以跨工具复现；#3 证明同一原始数据在 preheat 规则不同后会形成稳定差异。两者合起来，才是完整的方法学结论。
+            </p>
+          </header>
+
+          <div class="prep-grid analysis-input-grid">
+            <div class="input-spec">
+              <h3>本页比较什么</h3>
+              <p>把 CLI 与手工表格统一到 raw m/z 28 的等效总扣除口径。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="案例比较范围">
+                <table>
+                  <tbody>
+                    <tr><th scope="row">对象</th><td>#2 与 #3 的升温前 m/z 28 零点</td></tr>
+                    <tr><th scope="row">关键变量</th><td>时间零点、窗口、实际点、层级、统计量</td></tr>
+                    <tr><th scope="row">统一单位</th><td><code>pA</code>，相对于 raw 的有效总扣除</td></tr>
+                    <tr><th scope="row">判断类型</th><td>描述性方法审计，不替代物理合理性审核</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="input-spec">
+              <h3>本页不证明什么</h3>
+              <p>差异本身不能自动决定哪一个窗口在物理上最合理。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="案例证据边界">
+                <table>
+                  <tbody>
+                    <tr><th scope="row">不证明</th><td>CLI 天然客观，或表格天然容易出错</td></tr>
+                    <tr><th scope="row">不证明</th><td><code>−5～0 min + median</code> 对所有实验唯一正确</td></tr>
+                    <tr><th scope="row">不证明</th><td>下游全部差值只由 preheat 单独造成</td></tr>
+                    <tr><th scope="row">仍需人工</th><td>结合阀切换、温控、漂移和原始曲线确认窗口</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="analysis-question-map" role="group" aria-label="Preheat 分层扣除流程">
+            <div class="analysis-source">
+              <span>同一次脱附采集</span>
+              <strong>raw m/z 28</strong>
+              <p>比较前必须先确认两条路径读的是同一份原始信号。</p>
+            </div>
+            <ol>
+              <li>
+                <span>VACUUM</span>
+                <strong>独立固定电流</strong>
+                <code>I_vac = I_raw − B_vac</code>
+              </li>
+              <li>
+                <span>PREHEAT</span>
+                <strong>升温前窗口零点</strong>
+                <code>B_preheat = S(I_vac, t ∈ W)</code>
+              </li>
+              <li>
+                <span>CORRECTED</span>
+                <strong>交给下一阶段</strong>
+                <code>I_corr = I_raw − B_vac − B_preheat</code>
+              </li>
+            </ol>
+          </div>
+
+          <div class="audit-equation" aria-label="Raw 等效总扣除公式">
+            <span>跨方法统一比较口径</span>
+            <code>B_effective = B_vac + B_preheat</code>
+            <code>常数 vacuum 下：B_vac + median(I_raw − B_vac) = median(I_raw)</code>
+            <small>不能把一边的 post-vacuum preheat 增量，与另一边直接从 raw 扣除的一次性总背景直接作比较。</small>
+          </div>
+
+          <div class="audit-subsection">
+            <h3>四种“背景”不能混称一个数</h3>
+            <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="四类背景的来源和用途">
+              <table>
+                <thead>
+                  <tr><th scope="col">名称</th><th scope="col">来源与信号层级</th><th scope="col">用途</th><th scope="col">常见混淆</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>vacuum baseline</td><td>独立 vacuum 运行测得或明确配置的真空电流</td><td>从 raw 通道扣除固定仪器/真空电流</td><td>未测通道不能补成 <code>0 A</code></td></tr>
+                  <tr><td>preheat baseline</td><td>同一次 TPD 的正式升温前窗口</td><td>消除本次实验的升温前通道零点</td><td>必须说明它是 raw 总值还是 post-vacuum 增量</td></tr>
+                  <tr><td>calibration background</td><td>已知气体通入前的完整校准采集窗口</td><td>参与 response factor 估计</td><td>不等于样品 TPD 的 preheat</td></tr>
+                  <tr><td>integration baseline</td><td>定量响应曲线中审核的峰侧区间</td><td>构造峰下参考线并求面积</td><td>不能假定它会完全消除上游固定偏移</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="science-note">
+            <strong>请求窗口 ≠ 实际窗口</strong>
+            <p>
+              <code>−5～0 min</code> 只是请求范围。离散采样通常没有恰好位于两个端点的数据；审计必须同时保存实际首点、末点、点数、边界规则和可复核索引。两边文字都写同一范围，也不保证实际选中同一批点。
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="visual-evidence" aria-labelledby="visual-evidence-title">
+        <div class="step-marker" aria-hidden="true"><span>01</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>01</span>
+            <div>
+              <h2 id="visual-evidence-title">#2 的 preheat 合同相同，故该层重合；#3 的 preheat 合同不同，故该层错开。</h2>
+              <p>上排看实际选区和扣除水平，下排把总扣除与差值分开显示；先看绝对量，再看局部放大的微差。</p>
+            </div>
+          </header>
+
+          <figure class="audit-figure" aria-labelledby="preheat-comparison-caption">
+            <a href="attachments/preheat-window-offset-comparison.png" aria-label="打开图 1 原始尺寸">
+              <img
+                src="attachments/preheat-window-offset-comparison.png"
+                width="2200"
+                height="1589"
+                alt="四面板图。#2 的 CLI 与手工窗口完全重合，均为 64 点 median，总扣除 126.615 pA；#3 的 CLI 为 64 点 median，手工为较窄 51 点 raw mean，手工多扣 0.2616 pA。"
+                loading="lazy"
+                decoding="async"
+              >
+            </a>
+            <figcaption id="preheat-comparison-caption">
+              <strong>图 1 · Preheat 窗口与 m/z 28 扣除值。</strong>
+              A、B 面板为查看窗口内噪声而局部放大 y 轴；C 面板从零开始比较绝对总扣除；D 面板只放大 <code>手工 − CLI</code> 的小差值，所以不能把 D 的柱高与 C 直接作视觉比例比较。点击图可查看原尺寸。
+            </figcaption>
+          </figure>
+
+          <div class="figure-reading-guide" aria-label="图 1 阅读说明">
+            <div><span>看什么</span><strong>蓝色 CLI 窗口、斜线手工窗口，以及两条有效总扣除水平线是否重合。</strong></div>
+            <div><span>能说明</span><strong>#2 的入选点和 median 一致；#3 同时改变窗口、点数与统计量。</strong></div>
+            <div><span>不能说明</span><strong>哪个窗口在物理上必然正确，也不能仅凭放大图判定科学影响大小。</strong></div>
+          </div>
+
+          <div class="prep-grid analysis-input-grid">
+            <div class="input-spec">
+              <h3>#2：有条件的一致</h3>
+              <p>手工表格明确复刻了 CLI 的实际选择。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="#2 preheat 选择证据">
+                <table>
+                  <tbody>
+                    <tr><th scope="row">请求窗口</th><td><code>−5～0 min</code></td></tr>
+                    <tr><th scope="row">实际窗口</th><td><code>−4.930000～−0.010233 min</code></td></tr>
+                    <tr><th scope="row">实际点数</th><td><code>64</code></td></tr>
+                    <tr><th scope="row">统计量</th><td>两边均为 <code>median</code></td></tr>
+                    <tr><th scope="row">表格证据</th><td><code>results!M7 = MEDIAN(M10:M73)</code>，且 <code>M = raw − vacuum</code></td></tr>
+                    <tr><th scope="row">raw 等效总扣除</th><td>两边均为 <code>126.615 pA</code></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="input-spec">
+              <h3>#3：处理合同不同</h3>
+              <p>两边使用同一 raw 数据，但选择不同。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="#3 preheat 选择证据">
+                <table>
+                  <tbody>
+                    <tr><th scope="row">CLI</th><td><code>−4.972767～−0.052933 min</code>，64 点，post-vacuum <code>median</code></td></tr>
+                    <tr><th scope="row">手工</th><td><code>−4.582300～−0.677667 min</code>，51 点，raw <code>mean</code></td></tr>
+                    <tr><th scope="row">表格证据</th><td><code>results!G8 = AVERAGE(G10:G60)</code>，其中 <code>G</code> 为 raw m/z 28</td></tr>
+                    <tr><th scope="row">CLI 总扣除</th><td><code>112.5400 pA</code></td></tr>
+                    <tr><th scope="row">手工总扣除</th><td><code>112.8015686 pA</code></td></tr>
+                    <tr><th scope="row">手工 − CLI</th><td><code>+0.2615686 pA</code>（约 <code>+0.2324%</code>）</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <p class="analysis-table-note">
+            为避免把“扣除值差”与“校正信号差”混为一谈，本文统一定义
+            <code>ΔB ≡ B<sub>手工</sub> − B<sub>CLI</sub></code>，并定义
+            <code>ΔI ≡ I<sub>CLI</sub> − I<sub>手工</sub> = ΔB</code>。
+          </p>
+
+          <div class="analysis-formulas" role="group" aria-label="#2 与 #3 差值判读">
+            <div>
+              <span>#2</span>
+              <code>ΔB = 0.0000 pA</code>
+              <p>不是因为“表格与 CLI 天然相同”，而是六项处理选择已经对齐。</p>
+            </div>
+            <div>
+              <span>#3</span>
+              <code>ΔB = +0.2615686 pA</code>
+              <p>手工扣得更多，因此手工校正后的 m/z 28 整体更低同样的电流量。</p>
+            </div>
+            <div>
+              <span>定性边界</span>
+              <code>method difference ≠ manual error</code>
+              <p>只有相对于预先冻结的标准合同，才能判定某个实现是否执行错误。</p>
+            </div>
+          </div>
+
+          <aside class="science-note">
+            <strong>为什么 #2 会几乎完全一样</strong>
+            <p>
+              时间零点、64 个实际点、m/z 28、<code>vacuum → preheat</code> 顺序、<code>median</code> 与 raw 等效口径都相同。真空常数末位精度只会造成约 <code>10⁻¹⁸ A</code> 量级的 post-vacuum 表示差；统一到 raw 总扣除后消失。
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="sensitivity" aria-labelledby="sensitivity-title">
+        <div class="step-marker" aria-hidden="true"><span>02</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>02</span>
+            <div>
+              <h2 id="sensitivity-title">窗口与 mean/median 都在起作用，偏移还能向下游传播。</h2>
+              <p>用 2×2 交叉计算拆开选择敏感性，再沿真实中间列检查偏移怎样保持、缩放、抵消或累积。</p>
+            </div>
+          </header>
+
+          <div class="audit-subsection">
+            <h3>#3 的窗口 × 统计量敏感性</h3>
+            <p>四个格子全部使用同一 raw m/z 28，只改变窗口和统计量。</p>
+            <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="#3 窗口与统计量 2 乘 2 敏感性表">
+              <table>
+                <thead>
+                  <tr><th scope="col">实际窗口</th><th scope="col">点数</th><th scope="col">median</th><th scope="col">mean</th><th scope="col">mean − median</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>CLI 窗口 <code>−4.972767～−0.052933 min</code></td><td><code>64</code></td><td><code>112.5400 pA</code></td><td><code>112.6723438 pA</code></td><td><code>+0.1323438 pA</code></td></tr>
+                  <tr><td>手工窗口 <code>−4.582300～−0.677667 min</code></td><td><code>51</code></td><td><code>112.7600 pA</code></td><td><code>112.8015686 pA</code></td><td><code>+0.0415686 pA</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="analysis-table-note">
+              固定 median 时，换窗口增加 <code>0.2200 pA</code>；再在手工窗口把 median 换成 mean，增加 <code>0.0415686 pA</code>，合计 <code>0.2615686 pA</code>。若沿另一条路径分解，各项归因数值会改变，所以不能把它们当作彼此独立的固定“贡献率”。
+            </p>
+          </div>
+
+          <div class="audit-subsection">
+            <h3>较窄窗口也不自动更稳定</h3>
+            <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="#3 两个窗口稳定性诊断">
+              <table>
+                <thead>
+                  <tr><th scope="col">诊断</th><th scope="col">CLI 64 点窗口</th><th scope="col">手工 51 点窗口</th><th scope="col">怎样读</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>线性斜率</td><td><code>+0.0914 pA/min</code></td><td><code>+0.1805 pA/min</code></td><td>两段都有轻微上移，较窄窗口斜率反而更大</td></tr>
+                  <tr><td>前半段 median</td><td><code>112.540 pA</code></td><td><code>112.435 pA</code></td><td rowspan="2">前后半段水平变化比只看总体 SD 更直接</td></tr>
+                  <tr><td>后半段 median</td><td><code>112.970 pA</code></td><td><code>113.190 pA</code></td></tr>
+                  <tr><td>后半段 − 前半段</td><td><code>+0.430 pA</code></td><td><code>+0.755 pA</code></td><td>窗口中央较窄不等于没有趋势</td></tr>
+                  <tr><td>标准差 / MAD</td><td><code>0.992 / 0.650 pA</code></td><td><code>0.912 / 0.640 pA</code></td><td>离散略小，但不能抵消趋势证据</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="analysis-table-note">
+              线性斜率为 raw pA 对 <code>program_time_min</code> 的普通最小二乘斜率；SD 为样本标准差（<code>ddof=1</code>）；MAD 为未缩放的 <code>median(|x − median(x)|)</code>。前后半段按时间顺序拆分：64 点窗口为 32/32 点，51 点窗口为前 26/后 25 点。
+            </p>
+          </div>
+
+          <figure class="audit-figure" aria-labelledby="processing-chain-caption">
+            <a href="attachments/m28-processing-chain-comparison.png" aria-label="打开图 2 原始尺寸">
+              <img
+                src="attachments/m28-processing-chain-comparison.png"
+                width="2000"
+                height="1360"
+                alt="四面板 m/z 28 处理链图，分别展示 #2 和 #3 的 CLI 与人工表格从 raw 到背景校正及碎片校正后的曲线。"
+                loading="lazy"
+                decoding="async"
+              >
+            </a>
+            <figcaption id="processing-chain-caption">
+              <strong>图 2 · m/z 28 处理链。</strong>
+              Raw 曲线尺度很大，扣除后的差值容易在全量程视图中被压扁；因此“看起来重合”必须与逐点差值和阶段字段一起判断。手工标签沿用工作簿术语，不预设同名操作与 CLI 数学上相同。点击图可查看原尺寸。
+            </figcaption>
+          </figure>
+
+          <div class="figure-reading-guide" aria-label="图 2 阅读说明">
+            <div><span>看什么</span><strong>同一 raw 曲线经过背景扣除和物种映射后，形状是否保持、零点是否整体平移。</strong></div>
+            <div><span>能说明</span><strong>处理层级必须逐阶段对齐；大尺度重合可能掩盖一个稳定的小常数偏移。</strong></div>
+            <div><span>不能说明</span><strong>最终定量差异只来自某一阶段，也不能用视觉重合替代数值残差。</strong></div>
+          </div>
+
+          <div class="audit-subsection">
+            <h3>约 +0.044 的含义：下游系统性偏移，不是另一种随机误差</h3>
+            <p>
+              在 #3 的共同 628 个比较点上，raw m/z 28 完全相同；背景/preheat 校正后，<code>CLI − 手工</code> 恒为约 <code>+0.2615686 pA</code>。随后，两条原生完整处理链分别采用各自的 Ar/m/z 40 处理与 calibration factor（CLI <code>0.9069249122</code>；手工 <code>0.9074751411</code>），再经过 CO/Ar、流量换算与 60 mg 质量归一化。最终 CO 响应中观察到的 <code>CLI − 手工</code> 平均为 <code>+0.0441922 µmol·min⁻¹·g⁻¹</code>，中位数为 <code>+0.0443531 µmol·min⁻¹·g⁻¹</code>，范围约 <code>+0.0409942～+0.0450764 µmol·min⁻¹·g⁻¹</code>。这些点覆盖共同时间轴约 <code>0～48.9641 min</code> 的完整总响应，并非正式积分窗口或基线扣除响应。
+            </p>
+            <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="#3 固定偏移向下游传播">
+              <table>
+                <thead>
+                  <tr><th scope="col">比较层级</th><th scope="col">观察值或 CLI − 手工</th><th scope="col">判读</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>raw m/z 28</td><td><code>0 pA</code></td><td>输入信号本身相同</td></tr>
+                  <tr><td>背景/preheat 校正 m/z 28</td><td><code>+0.2615686 pA</code></td><td>手工总扣除更大，所以手工校正曲线更低</td></tr>
+                  <tr><td>物种 CO 电流</td><td><code>+0.2615686 pA</code></td><td>本案例的映射没有消除该常数差</td></tr>
+                  <tr><td>calibration factor</td><td>CLI <code>0.9069249122</code><br>手工 <code>0.9074751411</code></td><td>完整下游合同并非只改变 preheat；Ar/m/z 40 处理也有口径差异</td></tr>
+                  <tr><td>质量归一化 CO 响应</td><td>平均 <code>+0.0441922 µmol·min⁻¹·g⁻¹</code></td><td>这是两条原生完整处理链的总观察差，不是 preheat 的单独因果效应</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="analysis-table-note">
+              上述逐层结果近乎平行只说明主要形状相同；约 <code>+0.044 µmol·min⁻¹·g⁻¹</code> 是两条原生完整处理链观察到的系统差，不是可由“手工”身份直接定性的误差，更不能直接视为 <code>0.2615686 pA</code> 单独传播得到的纯 preheat 效应。只有固定 Ar/m/z 40、calibration factor 和其他阶段做逐项反事实重算，才能定量归因给 preheat。
+            </p>
+          </div>
+
+          <figure class="audit-figure" aria-labelledby="cumulative-caption">
+            <a href="attachments/cumulative-response-comparison.png" aria-label="打开图 3 原始尺寸">
+              <img
+                src="attachments/cumulative-response-comparison.png"
+                width="2000"
+                height="905"
+                alt="累计 CO 响应图。#2 的 CLI 和手工曲线几乎重合；#3 两条累计曲线随时间逐渐拉开。"
+                loading="lazy"
+                decoding="async"
+              >
+            </a>
+            <figcaption id="cumulative-caption">
+              <strong>图 3 · 完整总响应序列的梯形累计积分。</strong>
+              #2 两条累计曲线几乎重合；#3 的稳定响应差会随积分时间累积。但该图使用完整总响应与共同时间轴，不等同于某个正式峰面积合同。点击图可查看原尺寸。
+            </figcaption>
+          </figure>
+
+          <div class="figure-reading-guide" aria-label="图 3 阅读说明">
+            <div><span>看什么</span><strong>两条瞬时响应之间的小差异怎样随时间累积成可见的曲线间距。</strong></div>
+            <div><span>能说明</span><strong>最终图形接近不代表上游每一步相同；常数偏移可能产生持续累计影响。</strong></div>
+            <div><span>不能说明</span><strong>正式峰面积必然相差图中终值，或全部累计差都可单独归因于 preheat。</strong></div>
+          </div>
+
+          <aside class="science-note">
+            <strong>积分传播的边界</strong>
+            <p>
+              定义 <code>ΔA ≡ A<sub>CLI</sub> − A<sub>手工</sub></code>。若没有再次扣基线，且只考虑同单位校正信号中的常数差，则近似有 <code>ΔA ≈ ΔB × T</code>。正式 TPD 积分通常还有独立 integration baseline，它可能吸收一部分偏移；Ar 分母、response factor、截零和边界插值也会改变传播。因此必须沿真实处理链逐阶段核对，不能从一个上游差值直接猜最终面积。
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="shared-checks" aria-labelledby="shared-checks-title">
+        <div class="step-marker" aria-hidden="true"><span>03</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>03</span>
+            <div>
+              <h2 id="shared-checks-title">这些都是手工与 CLI 共同的研究者选择点。</h2>
+              <p>工具可以把已确认规则稳定执行，却不能替研究者判断哪个区间、模型、统计量或物理事件应进入正式合同。</p>
+            </div>
+          </header>
+
+          <figure class="audit-figure" aria-labelledby="calibration-caption">
+            <a href="attachments/calibration-window-comparison.png" aria-label="打开图 4 原始尺寸">
+              <img
+                src="attachments/calibration-window-comparison.png"
+                width="2000"
+                height="1313"
+                alt="两组样品的校准采集曲线、CLI 与手工 background 和 plateau 窗口，以及最终 response factor 对比。"
+                loading="lazy"
+                decoding="async"
+              >
+            </a>
+            <figcaption id="calibration-caption">
+              <strong>图 4 · Calibration 窗口与最终 response factor。</strong>
+              Preheat 不是唯一的选区问题。校准 background、plateau、估计量和实际配气比也会改变 response factor；校准采集时间轴独立于 TPD 的共同时间轴。点击图可查看原尺寸。
+            </figcaption>
+          </figure>
+
+          <div class="figure-reading-guide" aria-label="图 4 阅读说明">
+            <div><span>看什么</span><strong>CLI 与手工分别在哪段校准曲线上取 background 和 plateau，以及 factor 的差值。</strong></div>
+            <div><span>能说明</span><strong>同类主观选择存在于校准阶段；窗口相同时结果可接近，窗口不同时 factor 会改变。</strong></div>
+            <div><span>不能说明</span><strong>某个 factor 必然更正确，或 preheat 与 calibration 可以使用同一背景定义。</strong></div>
+          </div>
+
+          <ul class="audit-check-grid" aria-label="手工和 CLI 共同检查项">
+            <li><span>01</span><strong>原始数据身份</strong><p>确认同一 RGA、温控、通道、行数与导出版本；输入未对齐时不解释方法差。</p></li>
+            <li><span>02</span><strong>时间零点与对齐</strong><p><code>t=0</code> 是升温、阀切换还是实测温度离开平台；插值、外推和跨日规则是否相同。</p></li>
+            <li><span>03</span><strong>Vacuum baseline</strong><p>来源运行、稳定窗口、统计量、精度和未测通道语义；缺失不能伪装成零。</p></li>
+            <li><span>04</span><strong>Preheat 窗口</strong><p>请求与实际首尾点、点数、边界、趋势、尖峰、阀切换和升温过渡。</p></li>
+            <li><span>05</span><strong>统计量与异常点</strong><p>mean、median、trimmed mean、空值、MAD/sigma 过滤、先舍入还是保留完整精度。</p></li>
+            <li><span>06</span><strong>信号层级与顺序</strong><p>raw、vacuum-corrected、preheat-corrected、species current 与 quantified response 不可直接混比。</p></li>
+            <li><span>07</span><strong>Fragmentation</strong><p>矩阵行列方向、通道集合、单位阵、缺失通道与工作簿“fragment revised”的实际公式。</p></li>
+            <li><span>08</span><strong>Calibration</strong><p>background、plateau、点数、mean/median、target:Ar 配气比与 raw/processed Ar 口径。</p></li>
+            <li><span>09</span><strong>定量与归一化</strong><p>比值方向、标态、sccm 换算、质量单位和结果 basis 是否一致。</p></li>
+            <li><span>10</span><strong>Integration baseline</strong><p>积分温区、端点窗口、连接坐标、负值、截零、实际时间步长与边界插值。</p></li>
+            <li><span>11</span><strong>平滑与找峰</strong><p>平滑方法和宽度、峰区间、正负峰、prominence、峰距、峰数以及平滑是否进入积分。</p></li>
+            <li><span>12</span><strong>显示与比较尺度</strong><p>局部放大、零轴、单位与残差层级；视觉重合不能替代逐点差值。</p></li>
+          </ul>
+
+          <div class="audit-subsection">
+            <h3>Mean 与 median 都不是天然答案</h3>
+            <div class="analysis-formulas" role="group" aria-label="Mean 与 median 的方法边界">
+              <div>
+                <span>MEAN</span>
+                <code>x̄ = Σxᵢ / n</code>
+                <p>噪声对称、稳定且无离群点时效率高；对尖峰、漂移和过渡更敏感。</p>
+              </div>
+              <div>
+                <span>MEDIAN</span>
+                <code>middle(sorted(x))</code>
+                <p>对少量异常点较稳健；窗口若有趋势、多平台或过窄，仍会受选区影响。</p>
+              </div>
+              <div>
+                <span>正式合同</span>
+                <code>rule + rationale + exception</code>
+                <p>说明默认规则、选择依据与何时允许例外；不能由软件默认函数偶然决定。</p>
+              </div>
+            </div>
+          </div>
+
+          <aside class="science-note">
+            <strong>常见错误表述</strong>
+            <p>
+              不说“都写 −5～0 所以点相同”“数值都叫 preheat 所以可直接比较”“最终曲线重合所以阶段一致”或“有差值就是某一方算错”。先把实际点、层级、统计量、单位和处理顺序对齐，再判断是否偏离预先确认的标准。
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="audit-record" aria-labelledby="audit-record-title">
+        <div class="step-marker" aria-hidden="true"><span>04</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>04</span>
+            <div>
+              <h2 id="audit-record-title">研究者确认合同，CLI 固定执行并留痕。</h2>
+              <p>手工和 CLI 都应留下足够信息，使另一位研究者能够看到“究竟选了哪些点、为什么这样选”。</p>
+            </div>
+          </header>
+
+          <div class="audit-subsection">
+            <h3>每次 preheat 至少保存这些字段</h3>
+            <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="Preheat 建议审计字段">
+              <table>
+                <thead>
+                  <tr><th scope="col">类别</th><th scope="col">必须或建议保存的内容</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>实验与输入身份</td><td>experiment id、样品、批次、采集日期、原始文件身份与内部时间范围</td></tr>
+                  <tr><td>信号</td><td>m/z、源列、单位、增益与归一化状态</td></tr>
+                  <tr><td>时间对齐</td><td>零点定义、对齐方法、温控来源、跨日和越界规则</td></tr>
+                  <tr><td>请求窗口</td><td>requested start/end、边界是否包含</td></tr>
+                  <tr><td>实际窗口</td><td>actual first/last、row id 或等价索引、实际点数</td></tr>
+                  <tr><td>数据层级</td><td>raw、vacuum-corrected 或其他明确阶段</td></tr>
+                  <tr><td>统计与稳定性</td><td>正式 estimator、mean、median、SD、MAD/IQR、斜率、前后半段差</td></tr>
+                  <tr><td>Vacuum 与 preheat</td><td>各自数值、来源、精度，以及 raw 等效总扣除</td></tr>
+                  <tr><td>表格证据</td><td>工作表、单元格范围、公式、排除点和复制/筛选规则</td></tr>
+                  <tr><td>CLI 证据</td><td>软件版本、完整命令、配置、estimate、实际选中点和 ProcessingRecord</td></tr>
+                  <tr><td>审核</td><td>操作者、审核者、日期、选择理由和例外理由</td></tr>
+                  <tr><td>下游影响</td><td>对物种电流、response factor、阶段值、面积与峰结果的传播检查</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="audit-subsection">
+            <h3>推荐复核顺序</h3>
+            <ol class="analysis-logic" aria-label="Preheat 推荐复核顺序">
+              <li><span>01</span><strong>冻结输入与零点</strong><p>先确认数据身份和升温起点；否则相对窗口没有共同坐标。</p></li>
+              <li><span>02</span><strong>导出实际入选点</strong><p>保存每一个点，不只保存请求端点和最终常数。</p></li>
+              <li><span>03</span><strong>检查稳定性</strong><p>看趋势、尖峰、前后半段、mean/median、SD/MAD 与实验事件。</p></li>
+              <li><span>04</span><strong>锁定并传播复核</strong><p>研究者确认规则后再批量执行，并沿后续阶段检查影响。</p></li>
+            </ol>
+          </div>
+
+          <div class="prep-grid analysis-input-grid">
+            <div class="input-spec">
+              <h3>研究者负责</h3>
+              <p>决定处理合同的物理意义与例外条件。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="研究者职责">
+                <table>
+                  <tbody>
+                    <tr><th scope="row">判断</th><td>时间零点、窗口是否代表真实稳定状态</td></tr>
+                    <tr><th scope="row">选择</th><td>统计量、异常点、calibration、integration 和峰参数</td></tr>
+                    <tr><th scope="row">审核</th><td>差异是否影响科学结论，何时允许例外</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="input-spec">
+              <h3>CLI 负责</h3>
+              <p>把已确认规则稳定执行，并保留可机器核验的阶段证据。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="CLI 职责">
+                <table>
+                  <tbody>
+                    <tr><th scope="row">执行</th><td>按规则选点、计算、拒绝不足点数和错误顺序</td></tr>
+                    <tr><th scope="row">报告</th><td>实际窗口、点数、中间值、单位和数据层级</td></tr>
+                    <tr><th scope="row">留痕</th><td>版本、配置、输入输出身份、参数指纹和阶段顺序</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <aside class="science-note">
+            <strong>手工表格的合适角色</strong>
+            <p>
+              表格适合直观看点、检查公式、做独立复算和 2×2 敏感性分析。风险不在“手工”二字，而在范围、公式、筛选和操作历史不透明；只要这些内容完整记录，它可以严格复核，也可以与 CLI 完全一致。
+            </p>
+          </aside>
+
+          <div class="audit-subsection">
+            <h3>本案例留下的研究者问题</h3>
+            <ul>
+              <li>是否把 <code>−5～0 min + median</code> 定为这一系列实验的默认合同，而不是天然真理；</li>
+              <li>窗口斜率、前后半段差或 MAD 到什么阈值时必须重选；</li>
+              <li>正式结果是否同时保存 mean、median、MAD 与窗口斜率诊断；</li>
+              <li>#3 原 51 点窗口是否有尚未记录的实验事件依据；</li>
+              <li>固定其他处理阶段后，#3 最终约 <code>+0.044</code> 中有多少可归因于 preheat；</li>
+              <li>是否把本页清单固化到实验记录模板和 CLI 审核报告。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-finish shell" aria-labelledby="audit-finish-title">
+        <h2 id="audit-finish-title">先审核选择，再让工具复现。</h2>
+        <p>
+          #2 说明同一 preheat 处理合同可以跨 CLI 与表格复现；#3 说明窗口及其入选点、统计量会造成稳定且可传播的数值差，而信号层级的表达主要影响可比性与可追溯性。最重要的不是给工具贴“客观”或“主观”标签，而是让科研选择明确、可检查、可重复。
+        </p>
+        <div>
+          <a class="button button-primary" href="co-tpd-2wxq-example.html">查看完整 #2 处理链</a>
+          <a class="button button-secondary" href="commands.html#process">查看处理中段命令</a>
+          <a class="button button-secondary" href="evidence.html#raw-validation">查看证据边界</a>
+          <a class="button button-secondary" href="reference.html">返回技术参考</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="wordmark" href="index.html">tpxtpxtpx</a>
+          <p>Python 3.11+ · 历史 version 0.6.0 · 已退役 preheat 方法审计</p>
+        </div>
+        <nav aria-label="页脚导航">
+          <a href="preheat-window-selection-example.html" aria-current="page">历史 Preheat 审计</a>
+          <a href="co-tpd-2wxq-example.html">#2WXQ 实战</a>
+          <a href="evidence.html">运行证据</a>
+          <a href="analysis-workflow.html">曲线分析</a>
+          <a href="commands.html">命令地图</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="reference.html">技术参考</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

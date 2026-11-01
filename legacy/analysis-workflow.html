@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="从已定量的 TPD 响应曲线出发，审核局部基线、正式记录逐峰面积、绘制完整温程，并按绝对量、质量和 BET 比较多个实验。"
+    >
+    <meta name="theme-color" content="#f7f8f4">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="从响应曲线到吸附量与峰温 — tpxtpxtpx">
+    <meta
+      property="og:description"
+      content="同一条 TPD 曲线的基线、面积、峰位与完整温程，以及多个实验的三面板比较。"
+    >
+    <title>从响应曲线到吸附量与峰温 — tpxtpxtpx</title>
+    <link rel="stylesheet" href="site.css">
+  </head>
+  <body class="tutorial-page analysis-page">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="index.html" aria-label="tpxtpxtpx 首页">tpxtpxtpx</a>
+        <nav aria-label="主导航">
+          <a href="index.html">首页</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="commands.html">命令地图</a>
+          <a href="analysis-workflow.html" aria-current="page">曲线分析</a>
+          <a href="reference.html#cli">CLI</a>
+          <a href="evidence.html">运行证据</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="tutorial-hero shell" aria-labelledby="analysis-title">
+        <div class="measure tutorial-measure" aria-hidden="true">
+          <span>rate</span>
+          <span>plot</span>
+          <span>area</span>
+          <span>peak</span>
+          <span>review</span>
+        </div>
+
+        <div class="tutorial-hero-copy">
+          <p class="analysis-eyebrow">CHECKED CURVE · EXPLICIT QUESTIONS</p>
+          <h1 id="analysis-title"><span class="tutorial-title-lead">从响应曲线到</span> <span class="tutorial-title-tail">吸附量与峰温</span></h1>
+          <p>
+            同一张 normalized 表先回答“完整程序中的 total response 长什么样”；同一样品、同一 target 的多个峰共享 reviewed baseline 时，只做一次 <code>integration baseline preview → 人工审核 → accept</code>，再用一次 <code>integration areas</code> 处理多个具名区间。基线定义、候选摘要与正式面积写进 experiment TOML，逐点复算证据进入 <code>records/*.json</code>；不再生成扣基线、候选峰或积分 CSV。
+          </p>
+          <div class="hero-actions" role="group" aria-label="曲线分析入口">
+            <a class="button button-primary" href="#input-contract">先检查输入列</a>
+            <a class="button button-secondary" href="commands.html#analyze">返回命令地图</a>
+          </div>
+        </div>
+
+        <ul class="tutorial-outcomes" aria-label="本页解释的三个核心结果">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M5.5 15.5 9 12l3 2 6.5-7"></path>
+            </svg>
+            <span>完整升温支路看曲线</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M6 17h12M7 15l3-6 3 4 4-7"></path>
+            </svg>
+            <span>逐峰面积与位置写进 TOML</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M6 17h12M7 15c2-1 2-7 5-7s3 6 5 7"></path>
+            </svg>
+            <span>三种物理纵轴比较实验</span>
+          </li>
+        </ul>
+      </section>
+
+      <nav class="step-index" aria-label="本页步骤">
+        <ol class="shell">
+          <li><a href="#baseline-response"><span>01</span>审核基线</a></li>
+          <li><a href="#plot-response"><span>02</span>看曲线</a></li>
+          <li><a href="#integrate-response"><span>03</span>算吸附量</a></li>
+          <li><a href="#detect-peaks"><span>04</span>找峰温</a></li>
+          <li><a href="#compare-response"><span>05</span>比较实验</a></li>
+        </ol>
+      </nav>
+
+      <section class="tutorial-prep shell" id="input-contract" aria-labelledby="input-contract-title">
+        <div class="tutorial-section-offset">
+          <header class="tutorial-section-heading">
+            <h2 id="input-contract-title">先确认这是一条已定量曲线</h2>
+            <p>
+              本页从 quantify 的结果开始，不接收原始离子电流。输入是一张 N 行表：每行对应一个采样时刻的程序时间、拟合温度与响应值。
+            </p>
+          </header>
+
+          <div class="analysis-question-map" role="group" aria-label="normalized 输入与正式基线工件对应的分析问题">
+            <div class="analysis-source">
+              <span>共同输入</span>
+              <strong>rate.csv → normalized.csv</strong>
+              <p>N 行有限数值；先提出并审核一条分析基线。</p>
+            </div>
+            <ol>
+              <li><span>01</span><strong>基线审核</strong><code>integration baseline preview / accept</code></li>
+              <li><span>02</span><strong>形状与纵轴</strong><code>plot response</code></li>
+              <li><span>03</span><strong>温区内总量</strong><code>integration areas</code></li>
+              <li><span>04</span><strong>候选峰温</strong><code>integration peaks</code></li>
+              <li><span>05</span><strong>跨实验比较</strong><code>plot comparison</code></li>
+            </ol>
+          </div>
+
+          <div class="prep-grid analysis-input-grid">
+            <div class="input-spec">
+              <h3>运行时真正读取的三列</h3>
+              <p>列名来自当前 SDK 映射，不按位置猜测。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="响应曲线输入列与单位">
+                <table>
+                  <thead>
+                    <tr><th scope="col">列</th><th scope="col">单位</th><th scope="col">作用</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>program_time_min</code></td><td>min</td><td>主坐标；积分真正沿它进行</td></tr>
+                    <tr><td><code>temperature_fit_c</code></td><td>°C</td><td>辅助坐标；选温区和画横轴</td></tr>
+                    <tr><td><code>response_umol_min</code></td><td>µmol min<sup>−1</sup></td><td>绝对摩尔速率；TPD CLI 的积分输入</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="spec-note">
+                total 与 <code>baseline-subtracted response</code>（基线扣除响应）都从同一张 normalized long table 出发。后者按 target 选择物种，并由 experiment TOML 中已审核的 integration baseline 即时复算；<code>records/*.json</code> 保存详细证据，但不是计算输入，也不存在一张正式扣基线 CSV。
+              </p>
+            </div>
+
+            <div class="input-spec">
+              <h3><code>normalize</code> 增加哪些 basis</h3>
+              <p>绝对速率始终保留；缺少实测 BET 时不会生成 BET 列。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="归一化 basis 与输出列">
+                <table>
+                  <thead>
+                    <tr><th scope="col">basis</th><th scope="col">输出列</th><th scope="col">单位</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>absolute</code></td><td><code>response_umol_min</code></td><td>µmol min<sup>−1</sup></td></tr>
+                    <tr><td><code>mass-mmol</code></td><td><code>response_mmol_min_g</code></td><td>mmol min<sup>−1</sup> g<sup>−1</sup></td></tr>
+                    <tr><td><code>mass-umol</code></td><td><code>response_umol_min_g</code></td><td>µmol min<sup>−1</sup> g<sup>−1</sup></td></tr>
+                    <tr><td><code>bet</code></td><td><code>response_umol_min_m2</code></td><td>µmol min<sup>−1</sup> m<sup>−2</sup></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <figure class="code-window install-command analysis-command" aria-labelledby="normalize-command-title">
+            <figcaption class="terminal-bar" id="normalize-command-title">
+              <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+              归一化语法骨架：替换实际测量的样品质量
+            </figcaption>
+            <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd normalize experiment.toml \
+    --input out/rate.csv \
+    --mass-mg MEASURED_MASS_MG \
+    --output out/normalized.csv
+
+<span class="prompt">$</span> <span class="comment"># 只有确实测量过 BET 才增加：</span>
+<span class="prompt">$</span> <span class="comment"># --bet-surface-area-m2-g MEASURED_BET_M2_G</span></code></pre>
+          </figure>
+
+          <div class="analysis-formulas" role="group" aria-label="归一化公式">
+            <div>
+              <span>按质量，µmol</span>
+              <code>absolute ÷ (mass_mg / 1000)</code>
+              <p>得到 µmol min<sup>−1</sup> g<sup>−1</sup></p>
+            </div>
+            <div>
+              <span>按质量，mmol</span>
+              <code>absolute ÷ mass_mg</code>
+              <p>单位换算后得到 mmol min<sup>−1</sup> g<sup>−1</sup></p>
+            </div>
+            <div>
+              <span>按 BET 面积</span>
+              <code>mass-umol ÷ BET_m2_g</code>
+              <p>得到 µmol min<sup>−1</sup> m<sup>−2</sup></p>
+            </div>
+          </div>
+
+          <aside class="science-note">
+            <strong>缺失不是 0</strong>
+            <p>
+              曲线坐标和响应必须是有限数值；程序不会用 0 填补缺失。质量与 BET 必须是正的真实测量值：优先读取实验 TOML，也可由本次命令显式给出；若命令值与配置冲突，必须人工复核后加 <code>--reviewed-sample-override</code>。
+            </p>
+          </aside>
+
+          <details class="call-path">
+            <summary><code>normalize</code> 实际经过哪些层？</summary>
+            <p><code>tpdtpd normalize → normalize.execute → tpx.normalization.normalize_response → 新 CSV</code></p>
+            <p>输出保留规范坐标和绝对响应，再增加已请求的归一化列；其他无关输入列不会自动带入。</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="baseline-response" aria-labelledby="baseline-response-title">
+        <div class="step-marker" aria-hidden="true"><span>01</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>01</span>
+            <div>
+              <h2 id="baseline-response-title">先审核分析基线：preview 后才 accept</h2>
+              <p><code>integration baseline preview</code> 把可复算定义以 pending 状态写入 experiment TOML，并生成只作记录/展示的 review JSON 与审核图；科研人员看过后，再用 <code>integration baseline accept</code> 核验同一 normalized 输入和定义指纹，并把状态改为 reviewed。两步都不写 CSV。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="code-window command-window" aria-labelledby="baseline-command-title">
+                <figcaption class="terminal-bar" id="baseline-command-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  语法骨架：TOML 计算状态与记录/展示 JSON 分开
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd integration baseline preview experiment.toml \
+    --input NORMALIZED.csv --target TARGET \
+    --response-column response_umol_min --response-unit 'umol min^-1' \
+    --program-time-start-min REVIEWED_PROGRAM_START_MIN \
+    --start-c REVIEWED_BASELINE_START_C --end-c REVIEWED_BASELINE_END_C \
+    --baseline linear --baseline-left-range-c=LEFT_START:LEFT_END \
+    --baseline-right-range-c=RIGHT_START:RIGHT_END \
+    --baseline-estimator median --linear-on time \
+    --dpi DPI
+
+<span class="prompt">$</span> tpdtpd integration baseline accept experiment.toml \
+    --input NORMALIZED.csv --target TARGET</code></pre>
+              </figure>
+
+              <p class="analysis-table-note">
+                上例使用 CLI 默认 basename：review/accept JSON 进入 <code>records/</code>，审核图写在输入旁。只需更换输出目录时，保留 basename 并仅改父目录。
+              </p>
+
+              <div class="output-modes analysis-outputs">
+                <div>
+                  <h3>审核区间</h3>
+                  <p><code>reviewed_interval</code> 表示真正用于审核模型的区间；这里的模型、取样和估计量由研究者决定。</p>
+                </div>
+                <div>
+                  <h3>完整程序显示</h3>
+                  <p>后续 <code>integration peaks/areas</code> 与 baseline-subtracted 绘图从 normalized 表和 reviewed 定义复算。正式面积越出审核范围时默认拒绝；只有显式 <code>--allow-endpoint-held-extension</code> 才承担端点保持外延风险。</p>
+                </div>
+              </div>
+            </div>
+
+            <aside class="review-note">
+              <h3>术语为什么改</h3>
+              <p><code>baseline-subtracted response</code> 的中文是“基线扣除响应”：它准确说明“含基线响应 − 经审核分析基线”。旧称 <code>baseline-corrected net response</code> 同时使用 corrected 和 net，既冗余，也没有说明减去的究竟是哪一种基线。</p>
+              <p><code>vacuum</code>、<code>calibration background</code>、<code>response zeroing</code> 和 <code>integration baseline</code> 是四个不同阶段，不能互相替代。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="plot-response" aria-labelledby="plot-response-title">
+        <div class="step-marker" aria-hidden="true"><span>02</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>02</span>
+            <div>
+              <h2 id="plot-response-title">先看曲线：默认完整温程，并标注正式峰结果</h2>
+              <p><code>plot response</code> 只读取显式口径对应的 normalized 数据；默认 <code>--display-range program</code> 从程序零点画到第一次最高温，并在 normalized 输入与 TOML 指纹仍匹配时标注所有正式 <code>Tmax/Tp</code> 与当前 basis 面积。显示参数不会改写响应或平移零点。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="code-window command-window" aria-labelledby="plot-command-title">
+                <figcaption class="terminal-bar" id="plot-command-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  标准完整温程：省略 range 和 output 即在输入旁使用防撞默认值
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd plot response experiment.toml \
+    --input NORMALIZED.csv \
+    --response-mode total \
+    --basis BASIS
+
+<span class="prompt">$</span> <span class="comment"># 默认：program 完整升温支路、保留负值、自动标注正式峰结果</span>
+<span class="prompt">$</span> <span class="comment"># 默认图写在 NORMALIZED.csv 旁：&lt;target&gt;_response_total_&lt;basis&gt;_program.png</span></code></pre>
+              </figure>
+
+              <div class="output-modes">
+                <div>
+                  <h3>默认保存</h3>
+                  <p>即使不写 <code>--output</code>，也会新建包含 target、response mode、basis 与 range 的唯一语义文件名；已有目标仍拒绝覆盖。</p>
+                </div>
+                <div>
+                  <h3><code>--show / --output</code></h3>
+                  <p><code>--show</code> 在保存之外打开当前图形后端；<code>--output</code> 改用显式 PNG/PDF 路径。两者都不改变 CSV。</p>
+                </div>
+              </div>
+
+              <dl class="effect-list">
+                <div><dt>横坐标</dt><dd>默认 <code>program</code> 显示程序时间 ≥ 0 到第一次温度最高点的完整升温支路；<code>analysis</code> 读取 TOML baseline 的审核区间；<code>custom</code> 才接受成对温度边界</dd></div>
+                <div><dt>纵坐标</dt><dd>total 由 <code>--basis</code> 映射到 normalize 列；baseline-subtracted 从同一 normalized 表与 reviewed baseline 即时复算对应 basis</dd></div>
+                <div><dt>正式标注</dt><dd>默认读取同目标物种的 <code>[peak_integration.*]</code>，核验 normalized 输入 SHA-256 与 baseline 指纹；<code>Tmax</code> 是区间内最大积分响应采样点，只有 <code>reviewed-explicit</code> 才显示为 <code>Tp</code></dd></div>
+                <div><dt>不改变</dt><dd>输入 CSV、响应数值和归一化结果；<code>--no-annotate-integrations</code> 只关闭标注</dd></div>
+              </dl>
+
+              <details class="call-path">
+                <summary>为什么没有“自动选择最好看的 basis”？</summary>
+                <p><code>plot response → _verified_peak_annotations → _prepare_response_plot_frame → tpx.plotting.plot_response</code></p>
+                <p>total 列缺失时命令会报告当前可用 basis 和需要补做的归一化，而不是退回另一个纵轴。baseline-subtracted 读取同一 normalized 表，按 target 选择物种并使用 experiment TOML 中 reviewed baseline 复算；不读取 integration JSON，也不依赖历史扣基线 CSV。只有确需峰区裁图时才显式使用 <code>custom</code>。</p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>研究者检查</h3>
+              <ul>
+                <li>比较对象是否使用同一种 basis 与单位。</li>
+                <li>质量或 BET 是否来自对应样品的实测记录。</li>
+                <li>完整升温支路是否暴露了峰区外异常；需要裁图时是否另外保留完整图。</li>
+                <li>每个标注是否来自正确物种、结果 ID 和局部审核基线。</li>
+                <li>标题是否写清样品、物种、basis 与处理状态。</li>
+              </ul>
+              <p>图像用于复核和交流，不是新的定量数据表。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="integrate-response" aria-labelledby="integrate-response-title">
+        <div class="step-marker" aria-hidden="true"><span>03</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>03</span>
+            <div>
+              <h2 id="integrate-response-title">算吸附量：温度选区，时间积分</h2>
+              <p><code>integration areas</code> 从指定 target 的 normalized 输入和 experiment TOML 中 reviewed baseline 即时复算 <code>r(t)-b(t)</code>；温度负责选区，面积沿程序时间计算。正式运行把结果、输入 SHA-256 与 baseline 指纹写入 <code>[peak_integration.&lt;result-id&gt;]</code>，详细逐点证据写入 <code>records/&lt;result-id&gt;_areas.json</code>。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="code-window command-window" aria-labelledby="integrate-command-title">
+                <figcaption class="terminal-bar" id="integrate-command-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  先 preview；审核后用完全相同的科学参数正式发布
+                </figcaption>
+<pre tabindex="0"><code><span class="prompt">$</span> tpdtpd integration areas experiment.toml \
+    --input NORMALIZED.csv --target TARGET \
+    --start-c REVIEWED_START_C --end-c REVIEWED_END_C --interval-name PEAK_NAME \
+    --interval PEAK_2_NAME PEAK_2_START_C PEAK_2_END_C \
+    --result-id TARGET_INTEGRATION \
+    --preview
+
+<span class="prompt">$</span> <span class="comment"># 人工确认后去掉 --preview；只有人工复核过位置时才增加：</span>
+<span class="prompt">$</span> <span class="comment"># --peak-position PEAK_NAME REVIEWED_TP_C</span></code></pre>
+              </figure>
+
+              <div class="analysis-axis-grid" role="group" aria-label="积分选择轴与计算轴">
+                <div>
+                  <span>选择轴</span>
+                  <strong><code>temperature_fit_c</code></strong>
+                  <p>用 °C 界定要归属给该事件的闭区间。</p>
+                </div>
+                <div aria-hidden="true">→</div>
+                <div>
+                  <span>积分轴</span>
+                  <strong><code>program_time_min</code></strong>
+                  <p>用 min 对 µmol min<sup>−1</sup> 做梯形积分，结果是 µmol。</p>
+                </div>
+              </div>
+
+              <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="面积计算即时复算量与作用">
+                <table>
+                  <thead>
+                    <tr><th scope="col">即时复算量</th><th scope="col">积分是否使用</th><th scope="col">保存位置</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><code>r(t)</code></td><td>作为被积响应来源</td><td>来自 <code>normalized.csv</code></td></tr>
+                    <tr><td><code>b(t)</code></td><td>从响应中扣除</td><td>定义与审核状态在 experiment TOML；逐点证据在 JSON</td></tr>
+                    <tr><td><code>r(t)-b(t)</code></td><td>是</td><td>沿 <code>program_time_min</code> 积分；不另写派生 CSV</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="analysis-table-note">
+                基线模型、来源和估计量只在 <code>integration baseline preview</code> 阶段选择；旧的顶层 <code>integrate_peak_areas</code> 与内联 <code>--baseline*</code> 语法已不再注册，请按本页统一命令族迁移。
+              </p>
+
+              <div class="output-modes analysis-outputs">
+                <div>
+                  <h3>preview 不发布</h3>
+                  <p><code>--preview</code> 显示全部具名区间、暂算面积和范围警告，默认写 <code>records/&lt;result-id&gt;_areas_review.json</code> 与输入旁审核图，但不写 <code>[peak_integration.*]</code>。</p>
+                </div>
+                <div>
+                  <h3>正式 TOML + records JSON</h3>
+                  <p><code>[peak_integration.&lt;result-id&gt;]</code> 保存各具名区间、<code>Tmax/Tp</code> 语义、绝对/质量/BET 面积、样品属性快照、normalized 输入 SHA-256 与 baseline 指纹；<code>records/&lt;result-id&gt;_areas.json</code> 保存逐点证据。正式模式也不生成 CSV。</p>
+                </div>
+              </div>
+
+              <p class="analysis-table-note">
+                <code>--result-id</code> 是必填的稳定 TOML 科学身份，不是文件名装饰。同一样品、同一 target 的多峰共享 reviewed baseline 时，在一次 areas 中共用一个 result ID 和多个具名区间；不同样品的 offset/baseline 不共享。JSON 默认在 <code>records/</code>，图片写在输入旁；不擅自加 <code>fresh</code>、<code>final</code>、<code>v2</code> 或时间戳。
+              </p>
+
+              <details class="call-path">
+                <summary>积分如何保持与峰识别独立？</summary>
+                <p><code>integration areas → normalized target selection → reviewed baseline recomputation → integrate_curve → TOML / records JSON</code></p>
+                <p>面积动作从不调用 <code>integration peaks</code>，也不读取候选谷底为正式边界。研究者把确认后的具名温区显式输入；<code>--preview</code> 不写正式结果。正式运行未给 <code>--peak-position</code> 时只记录实际积分范围内最大响应采样点，语义是 <code>maximum-integration-response-sample</code>（<code>Tmax</code>），不会把未审核候选升级为 <code>Tp</code>。</p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>研究者必须选择</h3>
+              <ul>
+                <li>事件归属的温区，而不是“看起来差不多”的全图范围。</li>
+                <li>确认 normalized 输入字节、target 和 experiment TOML 中 reviewed baseline 的来源仍匹配。</li>
+                <li>负值保留还是截零；两者会改变积分量。</li>
+                <li>是否在请求的温度边界插值。</li>
+                <li>实际质量，以及确有测量时的 BET。</li>
+                <li>能区分物种、峰与分支的稳定结果 ID，以及峰位是否真的经过人工复核。</li>
+              </ul>
+              <p>当前方法只有 <code>trapezoid</code>；它适用于不等间隔程序时间。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="detect-peaks" aria-labelledby="detect-peaks-title">
+        <div class="step-marker" aria-hidden="true"><span>04</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>04</span>
+            <div>
+              <h2 id="detect-peaks-title">找峰温：先声明所有识别假设</h2>
+              <p><code>integration peaks</code> 从 normalized 表与已审核 baseline 即时复算指定 target 的基线扣除响应，再在自己的温区和参数下寻找候选峰；它不计算面积，也不做物种或机理归属。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="code-window command-window" aria-labelledby="peaks-command-title">
+                <figcaption class="terminal-bar" id="peaks-command-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  探索语法骨架：先替换全大写项
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd integration peaks experiment.toml \
+    --input NORMALIZED.csv --target TARGET --result-id TARGET_CANDIDATES_ID \
+    --basis BASIS \
+    --program-time-start-min REVIEWED_PROGRAM_START_MIN \
+    --start-c REVIEWED_START_C --end-c REVIEWED_END_C \
+    --count EXPECTED_COUNT \
+    --minimum-separation-c REVIEWED_SEPARATION_C \
+    --smoothing-window-c REVIEWED_WINDOW_C \
+    --plot-output PEAK_CANDIDATES.png</code></pre>
+              </figure>
+
+              <ol class="analysis-logic" aria-label="峰识别的四个显式阶段">
+                <li><span>01</span><strong>截取</strong><p>先按程序时间下限，再按温区保留曲线。</p></li>
+                <li><span>02</span><strong>平滑</strong><p>把请求的 °C 窗口按实际温度步长换算为点数。</p></li>
+                <li><span>03</span><strong>筛选</strong><p>按极性、峰高与最小温差选择候选。</p></li>
+                <li><span>04</span><strong>排序</strong><p>候选先按强度竞争，最终按峰温输出。</p></li>
+              </ol>
+
+              <div class="output-modes analysis-outputs">
+                <div>
+                  <h3>TOML 候选摘要</h3>
+                  <p><code>[integration_peaks.&lt;result-id&gt;]</code> 保存候选的程序时间、峰温、分口径峰高和建议边界。所有建议都标为 <code>unreviewed_candidate_not_used_for_integration</code>。</p>
+                </div>
+                <div>
+                  <h3>records JSON + 审核图</h3>
+                  <p><code>records/&lt;result-id&gt;_peaks.json</code> 保存逐点计算证据，输入旁审核图显示响应、基线、平滑结果和候选峰/谷底。显式 Gaussian seeds 可叠加探索性组件，但不输出面积；不生成峰表或曲线 CSV。</p>
+                </div>
+              </div>
+
+              <details class="call-path">
+                <summary>平滑结果会不会改变积分？</summary>
+                <p><code>integration peaks → normalized target selection → reviewed baseline recomputation → tpx detect_peaks → TOML / records JSON</code></p>
+                <p>不会。平滑只属于候选峰计算证据与显示；<code>integration areas</code> 从同一 normalized 表和 reviewed baseline 独立复算，并使用研究者明确给出的积分温区与负值/边界规则。</p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>研究者必须选择</h3>
+              <ul>
+                <li>响应 basis，以及找正峰还是负峰。</li>
+                <li>报告固定峰数，还是温区内全部候选。</li>
+                <li>最小峰间温差和以 °C 表示的平滑窗口。</li>
+                <li>绝对峰高阈值，或明确不用阈值。</li>
+                <li>预期峰数不足时严格失败，还是先接受更少结果。</li>
+              </ul>
+              <p>过小的非零平滑窗口或相对点数过宽的窗口都会被拒绝，而不是静默改成别的值。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="compare-response" aria-labelledby="compare-response-title">
+        <div class="step-marker" aria-hidden="true"><span>05</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>05</span>
+            <div>
+              <h2 id="compare-response-title">比较实验：完整 total response，三种物理纵轴</h2>
+              <p><code>plot comparison</code> 把至少两套实验的完整 normalized total response 放进一张图；默认依次绘制 absolute、mass-umol 与 BET 三个 panel，并把各自局部基线得到的正式峰面积列在图底表格中。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="code-window command-window" aria-labelledby="comparison-command-title">
+                <figcaption class="terminal-bar" id="comparison-command-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  每个系列都显式绑定 label、experiment TOML 与完整 normalized CSV
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd plot comparison \
+    --series SAMPLE_A SAMPLE_A.toml SAMPLE_A_NORMALIZED.csv \
+    --series SAMPLE_B SAMPLE_B.toml SAMPLE_B_NORMALIZED.csv \
+    --output TARGET_response_comparison.png</code></pre>
+              </figure>
+
+              <div class="analysis-formulas" role="group" aria-label="默认比较图的三个响应口径">
+                <div>
+                  <span>absolute</span>
+                  <code>response_umol_min</code>
+                  <p>µmol min<sup>−1</sup>；比较每份样品的绝对脱附速率</p>
+                </div>
+                <div>
+                  <span>mass-umol</span>
+                  <code>response_umol_min_g</code>
+                  <p>µmol min<sup>−1</sup> g<sup>−1</sup>；消除样品质量差异</p>
+                </div>
+                <div>
+                  <span>BET</span>
+                  <code>response_umol_min_m2</code>
+                  <p>µmol min<sup>−1</sup> m<sup>−2</sup>；按实测比表面积比较</p>
+                </div>
+              </div>
+
+              <dl class="effect-list">
+                <div><dt>完整横轴</dt><dd>每条曲线都先截取自己的完整升温支路；共享横轴取所有系列温区的并集，但曲线只画自己的实测范围，不向两端外推</dd></div>
+                <div><dt>数值显示</dt><dd>保留负值并画零参考线；样品用不同颜色、线型和 marker 区分，不把负值静默裁成 0</dd></div>
+                <div><dt>正式峰表</dt><dd>逐项列出样品、峰/特征、<code>Tmax/Tp</code> 语义、温度、µmol、µmol g<sup>−1</sup> 与 µmol m<sup>−2</sup>；面积来自各样品自己的 reviewed baseline，同一样品的多峰可共享</dd></div>
+                <div><dt>失败边界</dt><dd>默认任一系列缺质量、BET、所需响应列、正式积分或来源 SHA-256 匹配时整张图失败，不输出缺面板或缺峰的半成品；可重复 <code>--basis</code> 显式请求较少面板</dd></div>
+              </dl>
+
+              <details class="call-path">
+                <summary>为什么完整曲线和局部面积可以同图出现？</summary>
+                <p><code>plot comparison → _resolve_response_display_range(program) → _verified_peak_annotations → tpx.plotting.plot_response_comparison</code></p>
+                <p>每个 panel 的曲线骨架是各实验完整 total response；峰位置和面积来自 experiment TOML 中对应的正式积分记录。baseline-subtracted 显示由各自 normalized 表与 reviewed baseline 即时复算，不存在可被延长后冒充整段净响应的局部派生 CSV。</p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>外部 CLI 与 TPX 工作流</h3>
+              <p>在终端运行 CLI 后，在 TPX 实验处理页面选定同一实验目录和 TOML，读取工件列表。工作流可发现目录中的图、CSV、模型和 JSON；图表预览与下载使用列出时的 SHA-256 核对当前文件。</p>
+              <p>目录发现的外部工件与工作流本次运行输出分开记录；有关联 ProcessingRecord 或运行记录且 SHA-256 一致，只能证明当前文件身份。绘图 CLI 会复核 <code>[peak_integration.*]</code> 记录的 normalized 输入哈希与 baseline 指纹；记录存在本身不代表工作流已重新执行或人工审核。目录发现、哈希通过和图像可见都不代表研究者已经科学审核并接受基线、区间、面积或机理解释。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="review-checklist shell" aria-labelledby="analysis-checklist-title">
+        <div class="tutorial-section-offset">
+          <h2 id="analysis-checklist-title">不要把曲线、局部面积、候选峰和科学接受混成一个结论</h2>
+          <ul>
+            <li><span>01</span><strong>纵轴 basis</strong><p>归一化只改变比较基准，绝对响应仍保留。</p></li>
+            <li><span>02</span><strong>积分坐标</strong><p>温度负责选区，时间负责积分，单位才得到 µmol。</p></li>
+            <li><span>03</span><strong>基线假设</strong><p>基线来源、负值和边界插值必须随结果一起复核。</p></li>
+            <li><span>04</span><strong>位置语义</strong><p><code>integration peaks</code> 候选不进入正式结果；默认积分位置只能称 <code>Tmax</code>，人工显式复核后才称 <code>Tp</code>。</p></li>
+            <li><span>05</span><strong>正式峰结果</strong><p>正式面积摘要、normalized 输入 SHA-256 与 baseline 指纹写入 <code>[peak_integration.&lt;result-id&gt;]</code>；逐点证据写入 <code>records/&lt;result-id&gt;_areas.json</code>，不生成 integration summary/curve CSV。</p></li>
+            <li><span>06</span><strong>比较口径</strong><p>完整 total response 负责展示全温程；面积来自各样品自己的 reviewed baseline，同一样品多峰可共享，不同样品不共享。</p></li>
+            <li><span>07</span><strong>工作流边界</strong><p>外部文件可被目录发现并预览；“可见”“哈希一致”和“人工科学接受”是三个不同状态。</p></li>
+            <li><span>08</span><strong>输出模式</strong><p>默认报告给人看；机器消费时在首次叶命令运行中显式增加 <code>--json</code>，不要为取得 JSON 重跑写操作。</p></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="diagnostics shell" aria-labelledby="analysis-errors-title">
+        <div class="tutorial-section-offset">
+          <header class="tutorial-section-heading">
+            <h2 id="analysis-errors-title">常见错误怎么定位</h2>
+            <p>先检查列、单位和参数组合，再判断科学假设；不要用改列名或填零绕过约束。</p>
+          </header>
+
+          <div class="diagnostic-list">
+            <details>
+              <summary><code>Response table is missing column(s): temperature_fit_c.</code></summary>
+              <p>输入不是包含拟合温度的 <code>rate.csv</code> / <code>normalized.csv</code> 主表。积分或峰分析输出中的 <code>temperature_c</code> 不能冒充它。</p>
+            </details>
+            <details>
+              <summary>normalized 输入与已审核 baseline 不匹配</summary>
+              <p>正式面积、候选峰和基线扣除响应图都要求当前 normalized 输入 SHA-256、target 与 experiment TOML 中 reviewed baseline 的来源一致。<code>records/*.json</code> 只保存详细证据，不能替代 TOML 审核状态。</p>
+            </details>
+            <details>
+              <summary>旧的内联基线参数被拒绝</summary>
+              <p>旧顶层 <code>integrate_peak_areas</code> 已移除，<code>integration areas</code> 也不接受内联 <code>--baseline*</code>、<code>--linear-on</code> 或 <code>--already-corrected</code>。改为先运行 <code>integration baseline preview</code>，人工审核后再 <code>integration baseline accept</code>。</p>
+            </details>
+            <details>
+              <summary>温度边界无法插值</summary>
+              <p>请求边界必须位于实际温度范围内，温度坐标不能倒退；积分时间轴还必须严格递增。</p>
+            </details>
+            <details>
+              <summary>平滑窗口点数不足</summary>
+              <p>非零 °C 窗口会按实际温度步长换算成点数。窗口太小无法做局部二次平滑，窗口太大又可能超过当前温区的点数。</p>
+            </details>
+            <details>
+              <summary><code>Response basis … is unavailable</code></summary>
+              <p>输入没有该 basis 对应列。按错误提示用实测质量/BET 重新运行 <code>normalize</code>，不要自动退回另一纵轴。</p>
+            </details>
+            <details>
+              <summary>正式峰结果的 normalized 输入或 baseline 指纹不一致</summary>
+              <p><code>plot response</code> 与 <code>plot comparison</code> 会重新核验 <code>[peak_integration.*]</code> 记录的 normalized 输入 SHA-256 和 baseline 指纹。恢复与 TOML 精确匹配的输入，或在重新审核局部基线和面积后发布新的唯一结果；不能只改 TOML 路径或跳过检查。</p>
+            </details>
+            <details>
+              <summary>默认三面板比较因质量或 BET 缺失而失败</summary>
+              <p>默认 absolute、mass-umol、BET 三面板要求每个系列都有真实样品质量、实测 BET、对应响应列和正式归一化面积。补齐并重新运行 normalize / <code>integration areas</code>，或明确重复 <code>--basis</code> 只请求当前科学问题需要的口径；程序不会用 0 填补或输出半张图。</p>
+            </details>
+            <details>
+              <summary>输出文件已存在或与输入重名</summary>
+              <p>阶段命令拒绝覆盖输入、已有目标和重复输出路径。优先使用 CLI 默认 basename；只需要换目录时，保留 basename 并仅改父目录。单样图默认名已包含 target、response mode、basis 与 range，integration JSON 默认在 <code>records/</code>；必填 <code>result-id</code> 使用已审核的稳定科学身份或最小职责型 ID，不擅自加版本或时间戳。</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-finish shell" aria-labelledby="analysis-finish-title">
+        <h2 id="analysis-finish-title">完整温程负责暴露问题，局部审核负责给出面积。</h2>
+        <p>正式 TOML、三份来源哈希、单样图和三面板比较可以相互核对；TPX 工作流能展示这些工件，但最终科学接受仍由研究者明确完成。</p>
+        <div>
+          <a class="button button-primary" href="commands.html#analyze">查看分析命令</a>
+          <a class="button button-secondary" href="reference.html#cli">查看 CLI 参考边界</a>
+          <a class="button button-secondary" href="co-tpd-2wxq-example.html">查看 #2WXQ 实战对照</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="wordmark" href="index.html">tpxtpxtpx</a>
+          <p>Python 3.11+ · version 0.8.0 · 当前完整命令聚焦 TPD</p>
+        </div>
+        <nav aria-label="页脚导航">
+          <a href="evidence.html">运行证据</a>
+          <a href="analysis-workflow.html" aria-current="page">曲线分析</a>
+          <a href="commands.html">命令地图</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="reference.html#cli">CLI</a>
+          <a href="sdk-quickstart.html">SDK</a>
+          <a href="reference.html#architecture">架构</a>
+          <a href="coordinate-alignment.html">通用对齐</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

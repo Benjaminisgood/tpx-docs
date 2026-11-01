@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="tpxtpxtpx 运行证据与科学边界：区分固定运行时证据基线、历史匿名实测和未进入稳定版本的开发工作。"
+    >
+    <meta name="theme-color" content="#f7f8f4">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="运行证据与科学边界 — tpxtpxtpx">
+    <meta
+      property="og:description"
+      content="每一条能力声明都标明证据来源，以及它不能证明什么。"
+    >
+    <title>运行证据与科学边界 — tpxtpxtpx</title>
+    <link rel="stylesheet" href="site.css">
+  </head>
+  <body class="tutorial-page evidence-page">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="index.html" aria-label="tpxtpxtpx 首页">tpxtpxtpx</a>
+        <nav aria-label="主导航">
+          <a href="index.html">首页</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="commands.html">命令地图</a>
+          <a href="evidence.html" aria-current="page">运行证据</a>
+          <a href="reference.html">技术参考</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="tutorial-hero shell" aria-labelledby="evidence-title">
+        <div class="measure tutorial-measure" aria-hidden="true">
+          <span>800</span>
+          <span>600</span>
+          <span>400</span>
+          <span>200</span>
+          <span>0 K</span>
+        </div>
+
+        <div class="tutorial-hero-copy">
+          <h1 id="evidence-title"><span class="tutorial-title-lead">证据分级，</span> <span class="tutorial-title-tail">结论有边界。</span></h1>
+          <p>
+            当前接口、历史真实文件运行和正在开发的功能不能混在一起。这里说明每条公开声明由什么支撑，以及它没有证明什么。
+          </p>
+          <div class="hero-actions" role="group" aria-label="证据页入口">
+            <a class="button button-primary" href="#current-contract">检查当前接口</a>
+            <a class="button button-secondary" href="#raw-validation">查看历史实测</a>
+          </div>
+        </div>
+
+        <ul class="tutorial-outcomes" aria-label="本页采用的三种证据状态">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m7.5 12 3 3 6-7"></path>
+            </svg>
+            <span>固定运行时接口基线 · b69ca4b</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 7v5l3 2"></path>
+            </svg>
+            <span>固定真实数据复验 · #2WXQ</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M8 12h8"></path>
+            </svg>
+            <span>历史匿名首检 · 2026-08-10</span>
+          </li>
+        </ul>
+      </section>
+
+      <nav class="step-index" aria-label="本页章节">
+        <ol class="shell">
+          <li><a href="#evidence-levels"><span>00</span>证据等级</a></li>
+          <li><a href="#current-contract"><span>01</span>固定接口基线</a></li>
+          <li><a href="#raw-validation"><span>02</span>真实数据</a></li>
+          <li><a href="#evidence-boundaries"><span>03</span>公开边界</a></li>
+        </ol>
+      </nav>
+
+      <section class="tutorial-prep shell" id="evidence-levels" aria-labelledby="evidence-levels-title">
+        <div class="tutorial-section-offset">
+          <header class="tutorial-section-heading">
+            <h2 id="evidence-levels-title">先读证据等级</h2>
+            <p>日期、版本和 commit 都是证据的一部分。没有公开输入的数据运行，不冒充任何人都能重放的 benchmark。</p>
+          </header>
+
+          <div class="analysis-question-map">
+            <div class="analysis-source">
+              <span>固定运行时证据基线</span>
+              <strong>b69ca4b · tpdtpd 0.6.0</strong>
+              <p>接口输出与测试来自已提交的 <code>b69ca4b</code> 代码；这是 <code>0.6.0</code> 的归档证据，不再描述当前破坏性新表格与职责型文件名契约。</p>
+            </div>
+            <ol>
+              <li>
+                <span>FIXED RUNTIME</span>
+                <strong>固定接口基线</strong>
+                <code>源码 + 帮助 + 测试</code>
+              </li>
+              <li>
+                <span>FIXED REAL RUN</span>
+                <strong>#2WXQ 真实数据复验</strong>
+                <code>CLI ↔ XLSX，输入未发布</code>
+              </li>
+              <li>
+                <span>HISTORICAL</span>
+                <strong>2026-08-10 匿名首检</strong>
+                <code>只作读入与配置证据</code>
+              </li>
+            </ol>
+          </div>
+
+          <div class="science-note">
+            <strong>版本连续性</strong>
+            <p>
+              2026-08-10 的匿名首检发生在 <code>5f1a72d</code>，只保留为原始文件读入与 schema 4 配置的历史证据。2026-08-11 又在固定运行时证据基线 <code>b69ca4b</code> 上运行 #2WXQ 分步处理和 CLI↔XLSX 对照；新的 <code>preheat</code> 结论只由后一组证据支撑。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="current-contract" aria-labelledby="current-contract-title">
+        <div class="step-marker" aria-hidden="true"><span>01</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>01</span>
+            <div>
+              <h2 id="current-contract-title">固定运行时接口历史证据</h2>
+              <p>以下输出来自干净的 <code>b69ca4b</code> 基线，仅保留用于历史核对。其中的 <code>tpdtpd guide</code> 已退役，当前离线文档入口是 <code>tpxdocs list</code>；这段记录不可作为当前 CLI 命名指南。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="verified-output terminal-transcript" aria-labelledby="current-cli-evidence-title">
+                <figcaption id="current-cli-evidence-title">
+                  <strong>固定基线的零数据运行证据</strong>
+                  <span>commit b69ca4b；两条命令退出码均为 0，stderr 为空</span>
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd --version
+tpdtpd 0.6.0
+
+<span class="prompt">$</span> tpdtpd guide --json | python -c 'import json, sys; d = json.load(sys.stdin); print("principle:", d["principle"]); print("steps:", len(d["steps"])); print("default_output:", d["default_output"])'
+principle: The researcher is the workflow controller.
+steps: 27
+default_output: omit --output to append _&lt;stage&gt;.csv; calibration fit is a one-row metrics exception</code></pre>
+              </figure>
+
+              <p class="analysis-table-note">
+                这里按字段选择性显示当时、现已退役的 <code>guide --json</code>；完整对象有 7 个顶层键。当前文档浏览使用 <code>tpxdocs list</code> / <code>tpxdocs show RESOURCE_ID</code>，且 CLI 已改为职责型 CSV 名、<code>records/</code> JSON 与破坏性新表头，因此不要复制下面的旧 default_output。
+              </p>
+
+              <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="固定运行时接口的证据矩阵">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">公开声明</th>
+                      <th scope="col">权威证据</th>
+                      <th scope="col">解释边界</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>版本 0.6.0；16 个 TPD 顶层命令</td>
+                      <td><code>pyproject.toml</code>、registry、<code>--version</code> 与 41 行 <code>--help</code></td>
+                      <td>证明当前命令表面，不证明每条命令都已在某一实验上科学验证。</td>
+                    </tr>
+                    <tr>
+                      <td>29 个阶段叶命令默认给人看，机器模式显式使用 <code>--json</code></td>
+                      <td><code>tests/test_stage_output.py</code> 与 <code>emit_stage()</code></td>
+                      <td>两种模式改变 stdout 表达，不应改变科学计算。</td>
+                    </tr>
+                    <tr>
+                      <td>同一 <code>align</code> 契约 fixture 在两种输出模式下写出字节相同的 CSV</td>
+                      <td>干净基线双运行；两份 CSV 的 SHA256 均为 <code class="evidence-hash">715773411d5f7498335e26269e7100364322ee1aaab22e11bccfa1f99738d203</code></td>
+                      <td>fixture 只证明输出模式不改变这次表格计算，不是科研数据证据。</td>
+                    </tr>
+                    <tr>
+                      <td>表格阶段省略 <code>--output</code> 时使用职责型固定文件名</td>
+                      <td><code>stage_output_path()</code> 与默认命名回归测试</td>
+                      <td>默认路径只表达当前工件职责；不会扫描目录猜测上一步，也不会覆盖已有文件。</td>
+                    </tr>
+                    <tr>
+                      <td>阶段 CLI 在写入前拒绝输入碰撞和已有目标</td>
+                      <td><code>prepare_stage_inputs()</code> 与 no-clobber 回归测试</td>
+                      <td>这是 CLI 写前检查，不是并发原子保证，也不能外推为整个 SDK 永不覆盖。</td>
+                    </tr>
+                    <tr>
+                      <td>固定运行时证据基线的完整回归测试通过</td>
+                      <td><code>360 passed</code></td>
+                      <td>证明受覆盖的软件契约没有失效，不代替对实验决定和物理意义的审查。</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <p class="analysis-table-note">
+                完整 <code>--help</code> SHA256：<code class="evidence-hash">b110f20b60336f546bccef6b44d482a0fe4baad980bcfeedd619bf8e1ddac8c1</code>；已退役的 <code>guide --json</code> 历史工件 SHA256：<code class="evidence-hash">ea68eccaf1b5ccaa08a29724987f7edb04e61ab88367d5d17cd629f0d26f7697</code>。
+              </p>
+
+              <div class="output-modes">
+                <div>
+                  <h3>默认：人类完成报告</h3>
+                  <p>列出已有输入、输出的路径与 SHA256、结果、实际参数和 UTC 完成时间。</p>
+                </div>
+                <div>
+                  <h3>显式 <code>--json</code>：机器 stdout</h3>
+                  <p>同一信息写到 stdout；CLI 不会自动创建 JSON 旁车文件。</p>
+                </div>
+              </div>
+
+              <div class="science-note">
+                <strong>持久化边界</strong>
+                <p>
+                  稳定 schema 4 会受控保存温程或校准建议、已复核校准、当前逐 AMU 常数/指数真空模型和碎片矩阵等专用状态；部分阶段也会生成有明确 schema 的专用记录，例如温度拟合清单。但通用阶段完成报告仍只输出到 stdout；若要长期保存这份完整报告，研究者需显式重定向到一个新文件，且 shell 重定向本身不受 CLI no-clobber 保护。
+                </p>
+              </div>
+
+              <details class="call-path">
+                <summary>查看固定版本的源码与测试证据</summary>
+                <p>
+                  固定 commit 为 <code>b69ca4bdb025051bc4620070c34e65658514657b</code>。输出模式与写前检查位于
+                  <code>tpxtpx/tpdtpd/_common.py</code>；当时的静态路线图位于现已退役的历史路径
+                  <code>tpxtpx/tpdtpd/guide.py</code>；聚焦契约测试位于
+                  <code>tests/test_stage_output.py</code>。这些路径作为 checkout 内证据记录，不依赖公开仓库访问。
+                </p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>这组证据只证明接口</h3>
+              <ul>
+                <li>版本、命令注册和帮助可重放。</li>
+                <li>人类报告与 JSON 模式是显式选择。</li>
+                <li>职责型默认文件名和写前拒绝规则有回归覆盖。</li>
+              </ul>
+              <p>它没有读取科研数据，也没有证明本底、校准、定量或峰归属正确。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="raw-validation" aria-labelledby="raw-validation-title">
+        <div class="step-marker" aria-hidden="true"><span>02</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>02</span>
+            <div>
+              <h2 id="raw-validation-title">真实数据复验与历史首检</h2>
+              <p>2026-08-11 的 #2WXQ 对照检验覆盖了当前分步处理链；2026-08-10 的匿名首检仍保留为原始文件读入证据。两者的输入均未发布，不是可下载 benchmark。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <div class="analysis-question-map">
+                <div class="analysis-source">
+                  <span>当前复验日期</span>
+                  <strong><time datetime="2026-08-11">2026-08-11</time> · #2WXQ</strong>
+                  <p><code>tpdtpd 0.6.0</code>；已提交基线 <code>b69ca4b</code>。</p>
+                </div>
+                <ol>
+                  <li>
+                    <span>DECISIONS</span>
+                    <strong>CLI 与 XLSX 使用同一选择</strong>
+                    <code>区间 · 零点 · 基线 · 边界</code>
+                  </li>
+                  <li>
+                    <span>CHAIN</span>
+                    <strong>脱附支路含升温前零点</strong>
+                    <code>vacuum → preheat → fragmentation</code>
+                  </li>
+                  <li>
+                    <span>OBSERVED</span>
+                    <strong>积分差 0.0738 ppm</strong>
+                    <code>峰温完全一致</code>
+                  </li>
+                </ol>
+              </div>
+
+              <figure class="verified-output terminal-transcript" aria-labelledby="wxq-output-title">
+                <figcaption id="wxq-output-title">
+                  <strong>#2WXQ 实测对照摘要</strong>
+                  <span>私有路径、原始文件和原始数据 SHA256 未公开</span>
+                </figcaption>
+                <pre tabindex="0"><code>preheat interval:     -5:0 min
+m/z 28 zero offset:   1.266017e-10 A
+
+CLI amount:           0.850942010329558 µmol
+XLSX amount:          0.850942073129413 µmol
+difference:           -6.280e-08 µmol (0.0738 ppm)
+peak temperature:     -120.758771912645 °C (both)</code></pre>
+              </figure>
+
+              <div class="output-modes">
+                <div>
+                  <h3>这组证据证明</h3>
+                  <p>在相同人工决定下，当时的 <code>tpdtpd 0.6.0</code> 处理链与 XLSX 人工表格的积分和峰温可实测对照；<code>preheat</code> 在该历史版本中不是隐含的表格操作。</p>
+                </div>
+                <div>
+                  <h3>这组证据不证明</h3>
+                  <p>区间、基线、校准或峰归属本身是唯一正确的科学选择；也不证明其他数据会得到同样差异。</p>
+                </div>
+              </div>
+
+              <p>
+                全部命令、XLSX 列/公式对照、人工判断点与 711.95% 偏高的分解见<a href="co-tpd-2wxq-example.html">#2WXQ 实战案例</a>。
+              </p>
+
+              <h3>2026-08-10 匿名原始文件首检</h3>
+              <div class="analysis-question-map">
+                <div class="analysis-source">
+                  <span>证据运行日期</span>
+                  <strong><time datetime="2026-08-10">2026-08-10</time> · Asia/Shanghai</strong>
+                  <p><code>tpdtpd 0.6.0</code>；运行 commit <code>5f1a72d</code>。</p>
+                </div>
+                <ol>
+                  <li>
+                    <span>INPUT</span>
+                    <strong>两份真实原始文件</strong>
+                    <code>按字节复制后匿名化路径</code>
+                  </li>
+                  <li>
+                    <span>COMMANDS</span>
+                    <strong>创建、旧版验证、只读概览</strong>
+                    <code>历史运行包含一个现已移除的旧验证入口；当前使用 config inspect</code>
+                  </li>
+                  <li>
+                    <span>OBSERVED</span>
+                    <strong>三条命令均成功</strong>
+                    <code>exit 0 · stderr empty</code>
+                  </li>
+                </ol>
+              </div>
+
+              <figure class="verified-output terminal-transcript" aria-labelledby="historical-output-title">
+                <figcaption id="historical-output-title">
+                  <strong>历史匿名 <code>config inspect</code> stdout 摘录</strong>
+                  <span>同一次旧版运行还调用了现已移除的验证命令；这里不把它展示为当前入口。路径已省略；当时显式覆盖为 2 s，当前默认是 1 s</span>
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd config inspect experiment.toml \
+    --clock-elapsed-tolerance-s 2
+Schema:            4 (valid)
+RGA duration:      687.996 min (8811 points)
+Measured channels: m/z 2, m/z 14, m/z 18, m/z 28, m/z 40
+Temperature:       -181.90 to 245.60 °C (16653 points)</code></pre>
+              </figure>
+
+              <p>
+                当前第一次使用教程只展示现行的合并入口；本节保留旧版运行边界说明，但不把已移除命令写成可复制用法。
+              </p>
+
+              <div class="output-modes">
+                <div>
+                  <h3>它证明了</h3>
+                  <p>schema 4 可写可读；两份文件能由稳定读入器解析；当时显式覆盖的 2 s 容差可执行；m/z 28 与 40 存在；只读概览能返回数据范围。当前通用默认是 1 s，普通命令应省略该参数；如需复现实验专属 override，再以 live CLI help 为准显式指定。</p>
+                </div>
+                <div>
+                  <h3>它没有证明</h3>
+                  <p>物种归属、真空本底、碎片矩阵、校准、定量、积分、峰识别、重复性或机理解释正确。</p>
+                </div>
+              </div>
+            </div>
+
+            <aside class="review-note">
+              <h3>可复现性限制</h3>
+              <ul>
+                <li>两组证据的原始文件与原始数据 SHA256 都没有发布。</li>
+                <li>读者不能独立从 raw 重放精确点数、时长、AMU 集合、区间与最终结果。</li>
+                <li>精确数值只属于各自运行，不能外推为通用性能或科学正确性结论。</li>
+              </ul>
+              <p>“命令成功”只说明所列输入通过所列检查，不能升级为科学结论。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="evidence-boundaries" aria-labelledby="evidence-boundaries-title">
+        <div class="step-marker" aria-hidden="true"><span>03</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>03</span>
+            <div>
+              <h2 id="evidence-boundaries-title">隐私与公开边界</h2>
+              <p>公开证据应足以判断声明强度，又不能把私有绝对路径、原始数据或未经研究者确认的信息带进网站。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="运行证据的隐私分级">
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">分级</th>
+                      <th scope="col">内容</th>
+                      <th scope="col">处理方式</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>可公开</td>
+                      <td>版本、固定 commit、命令文本、退出码、证据日期，以及经研究者确认的案例合同、处理决定与结果</td>
+                      <td>直接列出，并同时写明解释边界。</td>
+                    </tr>
+                    <tr>
+                      <td>历史限定</td>
+                      <td>精确点数、时长、AMU 集合和温区</td>
+                      <td>只保留已公开摘录；明确可能构成实验指纹，不能独立重放。</td>
+                    </tr>
+                    <tr>
+                      <td>不公开</td>
+                      <td>私有绝对路径、未匿名原文件名、采集起始时间、原始数据及其 SHA256，以及未经研究者确认可公开的实验身份或参数</td>
+                      <td>不进入网页、截图、日志附件或示例命令。</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <ol class="analysis-logic" aria-label="当前尚未具备的公开证据">
+                <li>
+                  <span>01</span>
+                  <strong>没有公开端到端数据集</strong>
+                  <p>无法让第三方从 raw 重放到最终分析。</p>
+                </li>
+                <li>
+                  <span>02</span>
+                  <strong>没有第三方独立重放</strong>
+                  <p>#2WXQ 已在固定运行时证据基线重跑，但 raw 未发布，第三方仍无法核对每个输入字节。</p>
+                </li>
+                <li>
+                  <span>03</span>
+                  <strong>XLSX 不是科学真值</strong>
+                  <p>0.0738 ppm 表明两条路径在同决定下数值一致，不证明区间、零点和基线决定唯一正确。</p>
+                </li>
+                <li>
+                  <span>04</span>
+                  <strong>没有科学正确性保证</strong>
+                  <p>哈希和退出码不替代研究者对模型、参数和物理意义的判断。</p>
+                </li>
+              </ol>
+
+              <details class="call-path">
+                <summary>为什么网站没有继续使用旧截图？</summary>
+                <p>
+                  旧 <code>image.png</code> 展示已经删除的 <code>ingest</code>、<code>tempfit</code>、<code>tpxtpx ingest</code> 与 <code>tempfit --apply</code> 接口，因此已从当前文档退役。没有真实、必要且隐私安全的新媒体时，保留可搜索、可复制的逐字转录比制作示意终端更可信。
+                </p>
+              </details>
+            </div>
+
+            <aside class="review-note">
+              <h3>阅读原则</h3>
+              <ul>
+                <li>固定 commit 的证据不随 <code>main</code> 漂移。</li>
+                <li>历史实测必须保留日期、版本和不可复现原因。</li>
+                <li>未进入稳定提交的功能不计入当前能力。</li>
+              </ul>
+              <p>证据说明“发生了什么”；科学判断仍由研究者负责。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-finish shell" aria-labelledby="evidence-finish-title">
+        <h2 id="evidence-finish-title">先复核证据，再选择下一步。</h2>
+        <p>第一次使用从可读性检查开始；命令地图只帮助定位工具，不会替你串成自动工作流。</p>
+        <div>
+          <a class="button button-primary" href="first-experiment.html">开始第一次检查</a>
+          <a class="button button-secondary" href="commands.html">打开命令地图</a>
+          <a class="button button-secondary" href="co-tpd-2wxq-example.html">查看 #2WXQ 实战</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="wordmark" href="index.html">tpxtpxtpx</a>
+          <p>Python 3.11+ · 历史 0.6 运行证据页 · 当前命令合同见命令地图</p>
+        </div>
+        <nav aria-label="页脚导航">
+          <a href="evidence.html" aria-current="page">运行证据</a>
+          <a href="analysis-workflow.html">曲线分析</a>
+          <a href="commands.html">命令地图</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="sdk-quickstart.html">SDK 入门</a>
+          <a href="reference.html">技术参考</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

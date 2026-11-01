@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="#2WXQ CO-TPD 真实数据案例：保留 tpdtpd 0.6 的数值复验证据，并明确标注 0.8 的现行命令边界。"
+    >
+    <meta name="theme-color" content="#f7f8f4">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="#2WXQ 实战：CLI 与人工表格处理对照 — tpxtpxtpx">
+    <meta
+      property="og:description"
+      content="同一组科研决定，两条可逐项核对的数据处理路径。"
+    >
+    <title>#2WXQ 实战：CLI 与人工表格处理对照 — tpxtpxtpx</title>
+    <link rel="stylesheet" href="site.css">
+  </head>
+  <body class="tutorial-page analysis-page case-study-page">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="index.html" aria-label="tpxtpxtpx 首页">tpxtpxtpx</a>
+        <nav aria-label="主导航">
+          <a href="index.html">首页</a>
+          <a href="commands.html">命令地图</a>
+          <a href="co-tpd-2wxq-example.html" aria-current="page">#2WXQ 实战</a>
+          <a href="evidence.html">运行证据</a>
+          <a href="reference.html">技术参考</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="tutorial-hero shell" aria-labelledby="case-title">
+        <div class="measure tutorial-measure" aria-hidden="true">
+          <span>XLSX</span>
+          <span>CLI</span>
+          <span>µmol</span>
+          <span>ppm</span>
+          <span>review</span>
+        </div>
+
+        <div class="tutorial-hero-copy">
+          <p class="analysis-eyebrow">REAL CO-TPD · SAME REVIEWED DECISIONS</p>
+          <h1 id="case-title"><span class="tutorial-title-lead">#2WXQ 实战：</span> <span class="tutorial-title-tail">CLI 与人工表格对照</span></h1>
+          <p>
+            把人工表格里的每一列、每一个区间和每一种基线选择，逐项映射到独立的
+            <code>tpdtpd</code> 步骤。数值转录来自 0.6；已经退役的 <code>preheat</code>、
+            <code>integrate</code> 与 <code>peaks</code> 只作为历史证据，不是 0.8 可复制命令。现行名称和参数以
+            <a href="cli-command-reference.md">全部命令中文参考</a>及 live manifest 为准。
+          </p>
+          <div class="hero-actions" role="group" aria-label="案例入口">
+            <a class="button button-primary" href="#decision-map">先看逐阶段对照</a>
+            <a class="button button-secondary" href="#cli-run">查看历史 0.6 实跑命令</a>
+          </div>
+        </div>
+
+        <ul class="tutorial-outcomes" aria-label="案例结论">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m7.5 12 3 3 6-7"></path>
+            </svg>
+            <span>preheat 四通道零点一致</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M6 16h12M7 14l3-4 3 2 4-6"></path>
+            </svg>
+            <span>峰温完全相同</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M7 12h10M12 7v10"></path>
+            </svg>
+            <span>积分差 0.0738004 ppm</span>
+          </li>
+        </ul>
+      </section>
+
+      <nav class="step-index" aria-label="本页步骤">
+        <ol class="shell">
+          <li><a href="#case-contract"><span>00</span>案例与边界</a></li>
+          <li><a href="#decision-map"><span>01</span>逐阶段对照</a></li>
+          <li><a href="#cli-run"><span>02</span>历史 0.6 实跑</a></li>
+          <li><a href="#result-review"><span>03</span>结果与诊断</a></li>
+        </ol>
+      </nav>
+
+      <section class="tutorial-prep shell" id="case-contract" aria-labelledby="case-contract-title">
+        <div class="tutorial-section-offset">
+          <header class="tutorial-section-heading">
+            <h2 id="case-contract-title">先固定案例身份与比较口径</h2>
+            <p>
+              文件夹代号是 <code>#2WXQ</code>，其中原始采集名为 <code>20260804#2 NW</code>；本页记录的是 2026-08-11 的处理与复验，不把复验日期写成采集日期。
+            </p>
+          </header>
+
+          <div class="prep-grid analysis-input-grid">
+            <div class="input-spec">
+              <h3>实验合同</h3>
+              <p>这些值属于本案例，不是所有 CO-TPD 的默认值。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="#2WXQ 实验条件">
+                <table>
+                  <tbody>
+                    <tr><th scope="row">样品</th><td>Ge-ZSM-5</td></tr>
+                    <tr><th scope="row">样品质量</th><td><code>60 mg</code></td></tr>
+                    <tr><th scope="row">参比气</th><td>Ar，<code>25 sccm</code></td></tr>
+                    <tr><th scope="row">校准混合比</th><td>CO:Ar = <code>5:95</code></td></tr>
+                    <tr><th scope="row">处理思路</th><td>复用 #3WXQ 的人工判断框架，并重新核对 #2WXQ 的真实区间与数值</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="input-spec">
+              <h3>公开证据边界</h3>
+              <p>页面公开决定与结果，不公开私有原始文件。</p>
+              <div class="table-scroll" tabindex="0" role="region" aria-label="#2WXQ 证据边界">
+                <table>
+                  <tbody>
+                    <tr><th scope="row">可以复核</th><td>命令、公式、区间、点数、阶段结果与差值分解</td></tr>
+                    <tr><th scope="row">没有发布</th><td>原始 RGA、温控日志、私有路径及原始文件 SHA256</td></tr>
+                    <tr><th scope="row">不能声称</th><td>任何读者都能从公开数据独立重放；CLI 与 XLSX 逐末位完全相同</td></tr>
+                    <tr><th scope="row">运行基线</th><td><code>tpdtpd 0.6.0</code>，commit <code>b69ca4b</code>，完整测试 <code>360 passed</code></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="analysis-question-map" role="group" aria-label="校准与脱附两条数据支路">
+            <div class="analysis-source">
+              <span>共同配置</span>
+              <strong>schema 4 experiment.toml</strong>
+              <p>reference 与 calibration 保留明确审核状态；vacuum 当前电流映射与 fragmentation 矩阵由研究者显式检查。</p>
+            </div>
+            <ol>
+              <li>
+                <span>CALIBRATION</span>
+                <strong>完整采集 5678 行</strong>
+                <code>vacuum → fragmentation → calibration</code>
+              </li>
+              <li>
+                <span>HISTORICAL 0.6 DESORPTION</span>
+                <strong>对齐脱附 691 行</strong>
+                <code>vacuum → preheat → fragmentation</code>
+              </li>
+              <li>
+                <span>HISTORICAL 0.6 ANALYSIS</span>
+                <strong>复核后再解释</strong>
+                <code>quantify → normalize → integrate_peak_areas / detect_peaks</code>
+              </li>
+            </ol>
+          </div>
+
+          <aside class="science-note">
+            <strong>历史动作与当前四类基线不能混用</strong>
+            <p>
+              本页 <code>preheat</code> 是 0.6 历史流程中逐 AMU 的升温前常数，已经退役。当前
+              <code>vacuum</code> 是 fragmentation 前的逐 AMU 真空电流；calibration background 只是在完整标气采集中通入 CO 前的平台；
+              <code>response_zeroing</code> 位于 fragmentation 后，从当前样品 CO 等 resolved species 的任意已审核稳定无峰窗口估计常数；integration baseline 才是定量后定义峰面积的参考线。它们来源、信号域和用途都不同。
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="decision-map" aria-labelledby="decision-map-title">
+        <div class="step-marker" aria-hidden="true"><span>01</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>01</span>
+            <div>
+              <h2 id="decision-map-title">把人工表格的每一步映射到 CLI</h2>
+              <p>“一致”指研究者选择的模型、区间、估计量、通道、基线和峰参数一致；每个阶段仍要单独检查输出。</p>
+            </div>
+          </header>
+
+          <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="#2WXQ 人工表格与 CLI 逐阶段对照">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">科研决定</th>
+                  <th scope="col">人工表格处理</th>
+                  <th scope="col">CLI 与工件</th>
+                  <th scope="col">本次核对值</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>温程拟合与 RGA 对齐</td>
+                  <td>以 <code>16:34:21–17:18:21</code> 为升温边界，前后各取 5 min；全局 18 阶 polynomial，平台取 median。</td>
+                  <td><code>temperature fit</code> 写审阅 CSV、可重载 <code>.tpxmodel</code> 和 fit record；<code>temperature align</code> 只加载明确选择的模型本体，并按本次 align 的时钟容差、偏移与越界策略写 <code>aligned.csv</code>、追加 ProcessingRecord。</td>
+                  <td>共同 672 点最大温差 <code>4.974e-13 °C</code>；CLI 另保留 19 个 postheat 点，共 691 行。</td>
+                </tr>
+                <tr>
+                  <td>独立真空电流扣除</td>
+                  <td>逐列计算 <code>m_raw − vacuum_current</code>。m/z 2/18/28/40/44 分别扣 <code>1.77e-13 / 1.36e-13 / 1.33e-14 / 7.04e-15 / 7.05e-15 A</code>。</td>
+                  <td>本次历史复验使用常数：<code>vacuum show --baseline-model constant</code> 从完整标气 CSV 为各 m/z 独立选择一个真空窗口并输出复核材料；人工复核后用 <code>vacuum set</code> 写入。当前 <code>vacuum subtract</code> 会同时生成 <code>m{AMU}_input_a</code>、逐行 <code>m{AMU}_baseline_a</code> 与新的活动电流；另可逐 AMU 审核 raw-bound 两锚点纯指数。</td>
+                  <td>m/z 14 未测，不把表格占位 <code>0</code> 解释为实测 <code>0 A</code>。</td>
+                </tr>
+                <tr>
+                  <td id="preheat">历史 0.6 升温前质量通道零点</td>
+                  <td>在 <code>program_time_min &lt; 0</code> 的 64 点上，对 m/z 2/18/28/44 分别取 median，再从各自整列相减；m/z 40 此步不选。</td>
+                  <td>历史 <code>preheat estimate/subtract</code> 已删除。当前 <code>response_zeroing estimate</code> 位于 fragmentation 之后，按 resolved species 从显式坐标上的任意稳定无峰窗口分别估计，既可选升温前，也可选峰后尾段；<code>apply</code> 不带 target，一次接受并应用当前输入对应的全部零点。它仍不能冒充这项逐 AMU 历史计算。</td>
+                  <td>实际点位 <code>−4.93…−0.0102333 min</code>；m/z 28 零点 <code>1.266017e-10 A</code>。</td>
+                </tr>
+                <tr>
+                  <td>碎片矩阵</td>
+                  <td>五通道 identity 映射；例如校正后的 m/z 28 直接成为 CO 电流，m/z 40 成为 Ar 电流。</td>
+                  <td><code>fragmentation show</code> 复核行列；<code>fragmentation correct</code> 生成 <code>co_resolved_a</code> / <code>ar_resolved_a</code>。</td>
+                  <td>单位阵数值不变，但处理记录与物种列不可省略。</td>
+                </tr>
+                <tr>
+                  <td>CO/Ar 校准</td>
+                  <td>完整采集上以 <code>80:95 min</code> median 为 calibration background（192 点），以 <code>140:170 min</code> mean 为 plateau（384 点），配气比 <code>5:95</code>。</td>
+                  <td><code>calibration fit</code> 只读取完整采集的 <code>vacuum → fragmentation</code> 工件并保存 reviewed factor。</td>
+                  <td>XLSX/raw-Ar factor <code>0.9138991753033805</code>；CLI/processed-Ar factor <code>0.9138991115337894</code>。</td>
+                </tr>
+                <tr>
+                  <td>定量</td>
+                  <td><code>relative = I_CO / I_Ar</code>；<code>molar_ratio = relative × factor</code>；乘 <code>25 sccm</code> 后按 101.325 kPa、273.15 K 换算 µmol/min。</td>
+                  <td>当前依次显式运行 <code>quantify relative → composition → flow → rate</code>，各写 <code>relative.csv / composition.csv / flow.csv / rate.csv</code>；没有 <code>quantify all</code> 或 combined 布局。</td>
+                  <td>CLI 依法读取 processed Ar；本案例 XLSX 口径用 raw Ar，这只造成末位尺度差。</td>
+                </tr>
+                <tr>
+                  <td>60 mg 归一化</td>
+                  <td><code>response_mmol_min_g = response_umol_min / 60</code>；再乘 1000 得 <code>response_umol_min_g</code>。</td>
+                  <td><code>normalize --mass-mg 60</code> 保留绝对速率并增加质量 basis。</td>
+                  <td>最终量：CLI <code>0.0141823668388259 mmol/g</code>。</td>
+                </tr>
+                <tr>
+                  <td>积分</td>
+                  <td>先限制 <code>program_time ≥ 0</code>，再选 <code>−180.5:−80 °C</code> 的 128 点；左端 0，右端取 <code>−80:−60 °C</code> 的 median，按点序号线性连线；保留负值，不插值边界；沿时间做 trapezoid。</td>
+                  <td>当前先用 <code>integration baseline preview → 人工审核 → accept</code> 固定基线，再由 <code>integration areas</code> 显式给出区间。基线与面积摘要写 TOML，详细证据写 <code>records/*.json</code>，不生成分析 CSV。</td>
+                  <td>右端 CLI baseline <code>0.0103420452206326 µmol/min</code>；结果 <code>0.850942010329558 µmol</code>。</td>
+                </tr>
+                <tr>
+                  <td>峰温</td>
+                  <td>同一温区，质量归一化响应；21 点局部二次平滑、最小间距 20 °C、找 1 个正峰、无最低高度。</td>
+                  <td>当前 <code>integration peaks</code> 可使用等价的 <code>--smoothing-window-c 15.4862423088</code>，独立于正式面积运行；候选摘要进 TOML、逐点证据进 JSON，不生成峰表或曲线 CSV。</td>
+                  <td>两条路径都得到 <code>−120.758771912645 °C</code>。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="analysis-table-note">
+            人工表格的列公式是可见的逐行计算；CLI 则把相同决定拆成带来源检查的新工件。文件后缀便于阅读，但真正的下游门禁依赖输入 SHA256、父处理记录和配置指纹。
+          </p>
+
+          <div class="analysis-formulas" role="group" aria-label="#2WXQ 人工表格核心公式">
+            <div>
+              <span>升温前零点</span>
+              <code>offset = MEDIAN(I_vacuum_sub, t &lt; 0)</code>
+              <p><code>I_preheat = I_vacuum_sub − offset</code>；对每个被选 AMU 独立计算。</p>
+            </div>
+            <div>
+              <span>XLSX 校准 factor</span>
+              <code>(5/95) ÷ ((MEAN(I28_plateau) − MEDIAN(I28_background)) ÷ MEAN(I40_raw_plateau))</code>
+              <p>CLI 的公式结构相同，但来源门禁使 Ar 来自 processed species current。</p>
+            </div>
+            <div>
+              <span>摩尔速率</span>
+              <code>(I_CO/I_Ar) × factor × 25 × 101.325/(8.314×273.15) × 1000</code>
+              <p>前半段得到 CO/Ar 摩尔比；后半段把 sccm 换算为 µmol/min。</p>
+            </div>
+          </div>
+
+          <aside class="science-note">
+            <strong>m/z 40 的准确说法</strong>
+            <p>
+              m/z 40 只是在 <code>preheat</code> 阶段相对 vacuum-subtracted 输入逐点原样通过；更早的 vacuum 阶段已经从 raw m/z 40 扣除 <code>7.04e-15 A</code>。它不是“从原始数据开始完全不处理”。
+            </p>
+          </aside>
+
+          <p class="analysis-table-note">
+            本页证明的是“同一组审核决定可以跨工具复现”。若要检查换窗口、换点数或把 <code>median</code> 改成 <code>mean</code> 后为什么会出现稳定偏移，请继续阅读<a href="preheat-window-selection-example.html">#2/#3 preheat 窗口选择审计</a>。
+          </p>
+
+          <details class="call-path">
+            <summary>这一步与原有 <code>process_co_tpd.py</code> 是什么关系？</summary>
+            <p>
+              原实验脚本的 <code>subtract_experiment_background()</code> 正是同一计算语义：选择
+              <code>program_time_min &lt; 0</code>，对各个 vacuum-subtracted 通道取 median，再从整条曲线相减；m/z 40 在这一步透传。CLI 把它改写成可单独审查的
+              0.6 <code>preheat estimate → review → preheat subtract</code>，而不是把判断藏在整段脚本中；
+              当前版本已删除这条质量通道命令，改用 fragmentation 后的 <code>response_zeroing</code>：estimate 按目标物种分别审核，apply 则一次应用当前输入对应的全部零点。
+            </p>
+            <p>
+              脚本里的 CO calibration 零点是另一项计算；它对应上表的 calibration background，不属于 <code>preheat</code>。该外部脚本用于核对本案例语义，不随本项目安装包发布。
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="cli-run" aria-labelledby="cli-run-title">
+        <div class="step-marker" aria-hidden="true"><span>02</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>02</span>
+            <div>
+              <h2 id="cli-run-title">历史 0.6 命令逐条转录，不是当前可复制配方</h2>
+              <p>以下路径已脱敏，命令与输出名为 <code>tpdtpd 0.6.0</code> 复验证据，保留旧事实而不改写成“当前运行结果”。其中显式选择的 <code>preview/</code> 路径、combined CSV、峰表及积分曲线都不是当前默认合同；当前版本请按每段后的迁移说明和 live manifest 运行。</p>
+            </div>
+          </header>
+
+          <div class="step-layout">
+            <div class="step-main">
+              <figure class="code-window command-window" aria-labelledby="temperature-run-title">
+                <figcaption class="terminal-bar" id="temperature-run-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  历史 0.6 · 1 · 人工确认温程后拟合与对齐
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd temperature fit case/experiment.toml \
+    --heat-start 2026-08-04T16:34:21 \
+    --heat-end 2026-08-04T17:18:21 \
+    --clock-elapsed-tolerance-s 0 \
+    --model polynomial --polynomial-degree 18 \
+    --polynomial-monotonic-tolerance-c 0.23 \
+    --smooth-points 31 --smoothing-estimator median \
+    --window-extra-min 5 --minimum-ramp-points 3 \
+    --platform-estimator median --empty-platform-policy edge \
+    --fit-output case/out/preview/temperature_fit.csv \
+    --model-output case/out/temperature_model.tpxmodel \
+    --fit-record-output case/out/records/temperature_fit_record.json
+
+<span class="prompt">$</span> tpdtpd temperature align case/experiment.toml \
+    --model-input case/out/temperature_model.tpxmodel \
+    --clock-elapsed-tolerance-s 0 \
+    --time-offset-s 0 --out-of-bounds drop \
+    --output case/out/aligned.csv</code></pre>
+              </figure>
+
+              <aside class="science-note">
+                <strong>三工件与三种记录各有边界</strong>
+                <p><code>temperature_model.tpxmodel</code> 是只含边界、模型类型及系数或插值节点的可读 TOML 模型本体，也是 align 唯一的温度模型计算输入；<code>temperature_fit_record.json</code> 是绑定源文件、模型和审阅 CSV 路径/SHA256、实际参数与诊断的拟合审计清单，不参与 align。对齐成功后，experiment TOML 中的 <code>[[processing_record]]</code> 记录 <code>aligned.csv</code> 的实际 RGA、温控日志、模型、信号输入、align 参数与正式信号处理谱系；fit record 缺失或变化不会使这条谱系失效。当前工作流的 <code>receipt.json</code> 与日志记录进程的 argv、stdout/stderr、退出状态与时间，不替代实验处理父链。哈希一致、命令成功或记录存在都不等于研究者已经科学接受拟合与对齐结果。</p>
+              </aside>
+
+              <figure class="code-window command-window" aria-labelledby="calibration-run-title">
+                <figcaption class="terminal-bar" id="calibration-run-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  历史 0.6 · 2 · 完整采集校准支路：不使用 preheat
+                </figcaption>
+                <p class="code-note"><code>case/full_acquisition.csv</code> 必须就是 <code>experiment.toml</code> 中 <code>files.rga_csv</code> 解析到的原始 RGA 路径；仅内容相同的改名副本不会获得 <code>full_acquisition</code> artifact role，后续 calibration 会拒绝。</p>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd vacuum subtract case/experiment.toml \
+    --input case/full_acquisition.csv \
+    --output case/out/calibration_vacuum.csv
+
+<span class="prompt">$</span> tpdtpd fragmentation correct case/experiment.toml \
+    --input case/out/calibration_vacuum.csv \
+    --output case/out/calibration_fragmentation.csv
+
+<span class="prompt">$</span> tpdtpd calibration fit case/experiment.toml \
+    --input case/out/calibration_fragmentation.csv \
+    --target CO --target-mass 28 \
+    --calibration-background 80:95 \
+    --adsorption-plateau 140:170 --mixture 5:95 \
+    --background-estimator median --plateau-estimator mean \
+    --minimum-points 10 \
+    --output case/out/calibration_co.csv</code></pre>
+              </figure>
+
+              <figure class="code-window command-window" aria-labelledby="preheat-run-title">
+                <figcaption class="terminal-bar" id="preheat-run-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  历史 0.6 转录：已退役的 vacuum 后 preheat（不可复制到 0.8）
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd vacuum subtract case/experiment.toml \
+    --input case/out/aligned.csv \
+    --output case/out/vacuum.csv
+
+<span class="prompt">$</span> tpdtpd preheat estimate case/experiment.toml \
+    --input case/out/vacuum.csv --range=-5:0 \
+    --mass 2 --mass 18 --mass 28 --mass 44 \
+    --estimator median --minimum-points 64 \
+    --output case/out/preheat_offsets.csv
+
+<span class="prompt">$</span> <span class="comment"># 暂停：打开 preheat_offsets.csv，核对区间、64 点和四个电流</span>
+
+<span class="prompt">$</span> <span class="comment"># 历史 0.6 随后把独立 offsets CSV 交给已退役的 preheat subtract；当前流程不再使用这条命令或该文件输入参数</span>
+
+<span class="prompt">$</span> tpdtpd fragmentation correct case/experiment.toml \
+    --input case/out/preheat.csv \
+    --output case/out/fragmentation.csv</code></pre>
+              </figure>
+
+              <figure class="verified-output terminal-transcript" aria-labelledby="preheat-review-output-title">
+                <figcaption id="preheat-review-output-title">
+                  <strong>本次 estimate 审查值</strong>
+                  <span>请求区间 [−5, 0] min；实际每通道 64 个有限点</span>
+                </figcaption>
+                <pre tabindex="0"><code>m/z 2   2.994430e-10 A
+m/z 18  2.064414e-09 A
+m/z 28  1.266017e-10 A
+m/z 44  1.740995e-11 A
+
+actual program_time_min: -4.93 ... -0.0102333333333333
+m/z 40 maximum change during preheat subtract: 0.000e+00 A</code></pre>
+              </figure>
+
+              <figure class="code-window command-window" aria-labelledby="analysis-run-title">
+                <figcaption class="terminal-bar" id="analysis-run-title">
+                  <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                  历史 0.6 · 4 · 定量、归一化、积分和峰温（以下旧命令不可复制到当前版本）
+                </figcaption>
+                <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd quantify all case/experiment.toml \
+    --target CO \
+    --input case/out/fragmentation.csv \
+    --minimum-reference-fraction 0.1 --layout combined \
+    --output case/out/co_quantified.csv
+
+<span class="prompt">$</span> tpdtpd normalize case/experiment.toml \
+    --input case/out/co_quantified.csv --mass-mg 60 \
+    --output case/out/co_normalized.csv
+
+<span class="prompt">$</span> tpdtpd integrate_peak_areas case/experiment.toml \
+    --input case/out/co_normalized.csv \
+    --response-column response_umol_min --response-unit 'umol min^-1' \
+    --program-time-start-min 0 --start-c -180.5 --end-c -80 \
+    --method trapezoid --baseline linear --baseline-left-value 0 \
+    --baseline-right-range-c=-80:-60 --baseline-estimator median \
+    --linear-on index --keep-negative --no-interpolate-bounds \
+    --mass-mg 60 --summary-output case/out/co_integration.csv \
+    --curve-output case/out/co_integration_curve.csv
+
+<span class="prompt">$</span> tpdtpd detect_peaks case/experiment.toml \
+    --input case/out/co_normalized.csv \
+    --response-column response_umol_min_g \
+    --response-unit 'umol min^-1 g^-1' \
+    --program-time-start-min 0 --start-c -180.5 --end-c -80 \
+    --count 1 --minimum-separation-c 20 \
+    --smoothing-window-c 15.4862423088 \
+    --height-basis total --no-minimum-height \
+    --polarity positive --allow-fewer \
+    --peaks-output case/out/co_peaks.csv \
+    --curve-output case/out/co_peak_curve.csv</code></pre>
+                <p class="spec-note"><strong>历史语法边界：</strong>上面命令原样记录 <code>tpdtpd 0.6.0</code> 的复验，因此保留已删除的 <code>quantify all</code>、顶层 <code>integrate_peak_areas</code>/<code>detect_peaks</code>、内联基线参数和当时的 combined/summary/curve CSV。当前版本必须显式运行四个 quantify action，再走 <code>integration baseline preview → 人工审核 → accept</code>、<code>integration peaks</code> 与 <code>integration areas</code>。这些动作都从 <code>normalized.csv</code> 和 TOML 状态复算；分析摘要进 TOML、逐点证据进 <code>records/*.json</code>，不生成基线、候选峰或积分 CSV。普通命令不要复制上面的历史参数或路径。</p>
+              </figure>
+            </div>
+
+            <aside class="review-note">
+              <h3>每个暂停点看什么</h3>
+              <ul>
+                <li>fit CSV：边界、温度误差与是否出现非物理回落。</li>
+                <li><code>.tpxmodel</code>：能按明确模型类型与节点/系数重新加载，是 align 唯一的温度模型计算输入；fit record：独立审计源、实际拟合参数、诊断及模型/审阅表哈希，缺失或变化不阻断 align 与下游谱系。</li>
+                <li>vacuum：只把真实测量或明确选定的 AMU 电流写入当前映射；TOML 不保存逐通道来源或审核状态，缺失不补零。</li>
+                <li>preheat estimate：实际点位、逐通道 finite points 和 median。</li>
+                <li>fragmentation：行是 observed m/z，列是 true species；单位阵也执行。</li>
+                <li>calibration：完整采集区间、估计量和实际 5:95 配气比。</li>
+                <li>历史 0.6 integration curve：128 个实际点、线性 baseline、负值与边界规则；当前详细逐点证据改进 records JSON。</li>
+                <li>历史 0.6 peak curve：平滑窗口与峰数独立于积分参数；当前候选摘要进 TOML、逐点证据进 JSON。</li>
+              </ul>
+              <p>CLI 的 no-clobber 会拒绝覆盖旧工件；复跑时新建输出目录，不要删除旧证据来腾同名路径。SHA256 只核对字节完整性，不能代替这里的逐项科研复核。</p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell" id="result-review" aria-labelledby="result-review-title">
+        <div class="step-marker" aria-hidden="true"><span>03</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>03</span>
+            <div>
+              <h2 id="result-review-title">主错误消失，剩余差值可解释</h2>
+              <p>比较对象是“XLSX 按相同积分决定重新计算”的结果，不把正式交付工作簿里的另一个显示口径混作唯一 oracle。</p>
+            </div>
+          </header>
+
+          <div class="analysis-formulas" role="group" aria-label="#2WXQ 最终积分对照">
+            <div>
+              <span>XLSX · 同决定重积分</span>
+              <code>0.850942073129413 µmol</code>
+              <p>人工列公式与相同温区、基线、负值和边界规则。</p>
+            </div>
+            <div>
+              <span>tpdtpd · preheat 后</span>
+              <code>0.850942010329558 µmol</code>
+              <p>完整 provenance 链下的原生 CLI 结果。</p>
+            </div>
+            <div>
+              <span>绝对相对差</span>
+              <code>0.0738004 ppm</code>
+              <p>差 <code>−6.2799855e-08 µmol</code>；不是 711.95% 主错误。</p>
+            </div>
+          </div>
+
+          <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="#2WXQ 逐项复验结果">
+            <table>
+              <thead>
+                <tr><th scope="col">复验项</th><th scope="col">结果</th><th scope="col">判断</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>四个 preheat offset</td><td>与人工表格全部逐值相同</td><td>PASS</td></tr>
+                <tr><td>m/z 28 preheat 后共同 672 点最大差</td><td><code>2.262e-26 A</code></td><td>CSV 浮点往返尺度</td></tr>
+                <tr><td>m/z 40 在 preheat 步骤最大变化</td><td><code>0 A</code></td><td>按决定原样通过</td></tr>
+                <tr><td>CO 峰温</td><td>两者均为 <code>−120.758771912645 °C</code></td><td>完全相同</td></tr>
+                <tr><td>CO amount / 60 mg</td><td>CLI <code>0.0141823668388259 mmol/g</code></td><td>与积分差同比例</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>为什么旧原生结果会高 711.95%？</h3>
+          <p>
+            旧链漏掉 m/z 28 的 <code>1.266017e-10 A</code> 升温前零点。它经过 Ar 归一化、校准、25 sccm 与标态换算后，在积分窗内变成近似恒定的假响应；最终的斜线 baseline 只吸收了大约一半。
+          </p>
+
+          <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="旧结果 711.95% 误差分解">
+            <table>
+              <thead>
+                <tr><th scope="col">面积分解</th><th scope="col">µmol</th><th scope="col">物理含义</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>漏扣零点带来的原始假面积</td><td><code>12.1259804944704</code></td><td>进入积分前的上游恒定偏移</td></tr>
+                <tr><td>被线性积分 baseline 吸收</td><td><code>6.06766037265179</code></td><td>斜线只消除约一半</td></tr>
+                <tr><td>旧结果最终残留假面积</td><td><code>6.05832012181863</code></td><td>严格等于旧原生减去新原生</td></tr>
+                <tr><td>旧原生结果</td><td><code>6.90926213214819</code></td><td>相对同决定 XLSX 高 <code>711.954462040%</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <figure class="verified-output terminal-transcript" aria-labelledby="causal-check-title">
+            <figcaption id="causal-check-title">
+              <strong>因果闭合</strong>
+              <span>使用未舍入数值时严格一致</span>
+            </figcaption>
+            <pre tabindex="0"><code>12.1259804944704 − 6.06766037265179
+  ≈ 6.05832012181863 µmol
+
+6.90926213214819 − 0.850942010329558
+  = 6.05832012181863 µmol</code></pre>
+          </figure>
+
+          <aside class="science-note">
+            <strong>为什么仍不是逐末位相同</strong>
+            <p>
+              XLSX 的校准 factor 使用 raw Ar（<code>0.9138991753033805</code>），当前 CLI 的可验证校准来源链使用 processed Ar（<code>0.9138991115337894</code>）。这项独立口径解释了绝大部分 0.0738004 ppm 微差；它与 <code>preheat</code> 是否正确无关。正式交付 workbook/Origin 的显示口径为 <code>0.850942012954946 µmol</code>，也应与“同决定重积分”分开标注。
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="review-checklist shell" aria-labelledby="case-checklist-title">
+        <div class="tutorial-section-offset">
+          <h2 id="case-checklist-title">把这套方法迁移到下一个样品时</h2>
+          <ul>
+            <li><span>01</span><strong>重新复核温程</strong><p>不要复制 #2WXQ 的墙钟边界或 18 阶模型。</p></li>
+            <li><span>02</span><strong>重新测 vacuum</strong><p>未测通道保持缺失，不能从示例补成 0 A。</p></li>
+            <li><span>03</span><strong>重新审核响应零点</strong><p>当前版本在 fragmentation 后按物种分别 estimate，再用无 target 的 apply 一次应用全部当前零点；不要复制历史 preheat 的 AMU 或区间。</p></li>
+            <li><span>04</span><strong>重新核对配气</strong><p>calibration 区间、平台和 target:Ar 比例不是默认值。</p></li>
+            <li><span>05</span><strong>重新选积分</strong><p>温区、baseline、负值与插值决定随曲线一起审查。</p></li>
+            <li><span>06</span><strong>保留两条支路</strong><p>校准支路不使用脱附专用响应归零；脱附支路在 fragmentation 后才可选 response_zeroing。</p></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="tutorial-finish shell" aria-labelledby="case-finish-title">
+        <h2 id="case-finish-title">同一组决定，逐阶段核对。</h2>
+        <p>这个案例检验的是工具能否忠实执行研究者已经作出的决定，并把每一步变成可审查工件；迁移到新样品时，应从自己的实验事实重新开始，而不是复制 #2WXQ 参数。</p>
+        <div>
+          <a class="button button-primary" href="first-experiment.html">从新实验开始</a>
+          <a class="button button-secondary" href="preheat-window-selection-example.html">查看历史 Preheat 选择审计</a>
+          <a class="button button-secondary" href="commands.html#process">查看完整处理链</a>
+          <a class="button button-secondary" href="analysis-workflow.html">进入曲线分析</a>
+          <a class="button button-secondary" href="evidence.html#raw-validation">查看证据边界</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="wordmark" href="index.html">tpxtpxtpx</a>
+          <p>Python 3.11+ · 历史 version 0.6.0 · #2WXQ 真实数据复验</p>
+        </div>
+        <nav aria-label="页脚导航">
+          <a href="co-tpd-2wxq-example.html" aria-current="page">#2WXQ 实战</a>
+          <a href="preheat-window-selection-example.html">历史 Preheat 审计</a>
+          <a href="evidence.html">运行证据</a>
+          <a href="analysis-workflow.html">曲线分析</a>
+          <a href="commands.html">命令地图</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="reference.html#cli">CLI</a>
+          <a href="sdk-quickstart.html">SDK</a>
+          <a href="coordinate-alignment.html">通用对齐</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

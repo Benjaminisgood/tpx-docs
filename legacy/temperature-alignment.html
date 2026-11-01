@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="从 RGA Date/Time + ms 与温控 clock + elapsed_s 出发，学习 tpxtpxtpx 如何重建双时钟、人工复核温程、解释 offset 方向并写出可检查的对齐窄表。"
+    >
+    <meta name="theme-color" content="#f7f8f4">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="温程拟合与双时钟对齐 — tpxtpxtpx">
+    <meta
+      property="og:description"
+      content="两只时钟先各自重建；研究者确认关系后，才生成温程坐标。"
+    >
+    <title>温程拟合与双时钟对齐 — tpxtpxtpx</title>
+    <link rel="stylesheet" href="site.css">
+    <script src="temperature-alignment.js" defer></script>
+  </head>
+  <body class="tutorial-page temperature-alignment-page">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="index.html" aria-label="tpxtpxtpx 首页">tpxtpxtpx</a>
+        <nav aria-label="主导航">
+          <a href="index.html">首页</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="commands.html">命令地图</a>
+          <a href="temperature-alignment.html" aria-current="page">温程对齐</a>
+          <a href="reference.html">技术参考</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="temperature-hero shell" aria-labelledby="temperature-title">
+        <div class="measure temperature-measure" aria-hidden="true">
+          <span>t</span>
+          <span>ms</span>
+          <span>s</span>
+          <span>min</span>
+        </div>
+
+        <div class="temperature-hero-copy">
+          <p class="temperature-eyebrow">TEMPERATURE CLOCKS · RECONSTRUCT → REVIEW → ALIGN</p>
+          <h1 id="temperature-title">两只时钟，<br>先重建，再对齐。</h1>
+          <p>
+            RGA 的 <code>Date/Time + ms</code> 与温控日志的
+            <code>clock + elapsed_s</code> 来自两个记录系统。程序先分别重建
+            <code>datetime</code>；研究者确认温程边界和时钟关系后，才派生
+            <code>program_time_min</code>。
+          </p>
+          <div class="hero-actions" role="group" aria-label="本页入口">
+            <a class="button button-primary" href="#reconstruct">看暂停如何重建</a>
+            <a class="button button-secondary" href="#clock-offset">确认 offset 方向</a>
+          </div>
+          <p class="temperature-hero-note">
+            源字段 ≠ 派生坐标 · suggestion ≠ reviewed fit · fit temperature ≠ 实测温度
+          </p>
+        </div>
+
+        <figure class="clock-map" aria-labelledby="clock-map-title">
+          <figcaption id="clock-map-title">
+            <span>两条独立来源</span>
+            <strong>在绝对本地时间上相遇</strong>
+          </figcaption>
+          <div class="clock-map-source clock-map-rga">
+            <span>RGA</span>
+            <strong><code>Date/Time</code> metadata + <code>ms</code></strong>
+            <div class="clock-map-rail" aria-hidden="true"><i></i></div>
+            <small><code>read_rga_csv()</code></small>
+          </div>
+          <div class="clock-map-source clock-map-temperature">
+            <span>温控日志</span>
+            <strong><code>clock</code> + <code>elapsed_s</code></strong>
+            <div class="clock-map-rail" aria-hidden="true"><i></i></div>
+            <small><code>read_temperature_log()</code></small>
+          </div>
+          <div class="clock-map-junction">
+            <span aria-hidden="true">↓</span>
+            <strong><code>datetime</code></strong>
+            <p>共享的对齐坐标，不代表仪器已自动同步</p>
+          </div>
+          <div class="clock-map-derived">
+            <div>
+              <span>RGA 首行</span>
+              <strong><code>acquisition_time_min</code></strong>
+            </div>
+            <div class="clock-map-reviewed">
+              <span>人工复核的 <code>heat_start</code></span>
+              <strong><code>program_time_min</code></strong>
+            </div>
+          </div>
+        </figure>
+      </section>
+
+      <nav class="step-index temperature-step-index" aria-label="本页章节">
+        <ol class="shell">
+          <li><a href="#reconstruct"><span>01</span>重建双时钟</a></li>
+          <li><a href="#review-fit"><span>02</span>建议与拟合</a></li>
+          <li><a href="#clock-offset"><span>03</span>偏移与越界</a></li>
+          <li><a href="#aligned-output"><span>04</span>读对齐输出</a></li>
+        </ol>
+      </nav>
+
+      <section class="temperature-reconstruct shell" id="reconstruct" aria-labelledby="reconstruct-title">
+        <header class="temperature-section-heading">
+          <span>01</span>
+          <div>
+            <h2 id="reconstruct-title">先让每只时钟说清自己</h2>
+            <p>墙钟给绝对锚点，累计计时给段内精度；两者职责不同，不能删掉其中一个。</p>
+          </div>
+        </header>
+
+        <dl class="coordinate-dictionary" aria-label="五个时间字段的来源与意义">
+          <div>
+            <dt><code>rga_elapsed_hms</code></dt>
+            <dd>HAL 原始 <code>Time</code> 的显示文本；保留用于复核，不拿它做跨仪器计算。</dd>
+          </div>
+          <div>
+            <dt><code>acquisition_time_min</code></dt>
+            <dd>RGA <code>ms</code> 相对首个有效采集行的分钟数；起点是“开始采集”。</dd>
+          </div>
+          <div>
+            <dt><code>clock</code></dt>
+            <dd>温控日志的秒级本地墙钟；跨午夜回退时，读取器把日期推进一天。</dd>
+          </div>
+          <div>
+            <dt><code>elapsed_s</code></dt>
+            <dd>温控计数器；在一个连续锚点段内保留亚秒采样间隔。</dd>
+          </div>
+          <div>
+            <dt><code>program_time_min</code></dt>
+            <dd>相对复核后有效 <code>heat_start</code> 的分钟数；它是派生坐标，不是第三只仪器时钟。</dd>
+          </div>
+        </dl>
+
+        <div class="pause-lab">
+          <div class="pause-lab-copy">
+            <p class="temperature-eyebrow">PAUSE REGRESSION FIXTURE</p>
+            <h3>为什么不能只看 <code>elapsed_s</code>？</h3>
+            <p>
+              温控计数器可能在仪器暂停时重复。若只累计它，会把真实的墙钟空档压缩掉；读取器会从新的
+              <code>clock</code> 锚点重新开段，再继续使用 <code>elapsed_s</code> 的段内精度。
+            </p>
+            <div class="pause-comparison" role="group" aria-label="错误累计与代码重建的比较">
+              <div>
+                <span>只看 elapsed_s</span>
+                <strong>0 → 1.1 → 1.1 → 2.2 s</strong>
+                <small>9 秒暂停被压缩</small>
+              </div>
+              <div>
+                <span>clock 新锚点 + elapsed_s</span>
+                <strong>0 → 1.1 → 10 → 11.1 s</strong>
+                <small>保留暂停，报告 1 个 discontinuity</small>
+              </div>
+            </div>
+          </div>
+
+          <figure class="pause-fixture" aria-labelledby="pause-fixture-title">
+            <figcaption id="pause-fixture-title">
+              <strong>稳定回归测试的四行 fixture</strong>
+              <span>不是科研实测数据</span>
+            </figcaption>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="温控暂停重建测试表，可横向滚动">
+              <table>
+                <caption class="visually-hidden">温控 clock、elapsed_s 与重建相对时间的四行回归测试数据</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">行</th>
+                    <th scope="col"><code>clock</code></th>
+                    <th scope="col"><code>elapsed_s</code></th>
+                    <th scope="col">重建相对时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">0</th><td>12:00:00 AM</td><td>0.0 s</td><td>0.0 s</td></tr>
+                  <tr><th scope="row">1</th><td>12:00:01 AM</td><td>1.1 s</td><td>1.1 s</td></tr>
+                  <tr class="pause-anchor-row"><th scope="row">2</th><td>12:00:10 AM</td><td>1.1 s</td><td>10.0 s · 新锚点</td></tr>
+                  <tr><th scope="row">3</th><td>12:00:11 AM</td><td>2.2 s</td><td>11.1 s</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </figure>
+        </div>
+
+        <aside class="tolerance-note">
+          <strong><code>--clock-elapsed-tolerance-s</code> 默认 <code>1</code></strong>
+          <p>
+            相邻行的 <code>clock</code> 步长与 <code>elapsed_s</code> 步长相差超过默认 1 秒，或
+            <code>elapsed_s</code> 不再递增时，程序新建锚点段。<strong>1 秒是可覆盖的默认分段判据，不是允许两只仪器整体漂移 1 秒，也不是物理常数。</strong>
+          </p>
+        </aside>
+
+        <p class="call-chain temperature-call-chain">
+          <code>HAL CSV</code><span>→</span><code>tpx.io.read_rga_csv()</code><span>→</span><code>datetime</code>
+          <b>·</b>
+          <code>temperature TXT</code><span>→</span><code>tpx.io.read_temperature_log()</code><span>→</span><code>datetime</code>
+        </p>
+      </section>
+
+      <section class="tutorial-step shell temperature-review" id="review-fit" aria-labelledby="review-fit-title">
+        <div class="step-marker" aria-hidden="true"><span>02</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>02</span>
+            <div>
+              <h2 id="review-fit-title">建议、复核、拟合、对齐：四个边界</h2>
+              <p>命令不会把 suggestion 偷换成结论，也不会自动执行下一步。</p>
+            </div>
+          </header>
+
+          <ol class="temperature-stage-rail" aria-label="温程处理的四个明确阶段">
+            <li>
+              <span>01 · suggest</span>
+              <strong>机器提出候选边界</strong>
+              <p>读取温控日志，输出候选与警告；成功结果写入 provisional TOML 记录。</p>
+            </li>
+            <li class="temperature-human-stage">
+              <span>02 · human review</span>
+              <strong>研究者检查物理事件</strong>
+              <p>确认起止时刻、候选歧义、暂停分段与数据来源。</p>
+            </li>
+            <li>
+              <span>03 · fit</span>
+              <strong>显式边界拟合模型</strong>
+              <p>直接 CLI 必须给出复核后的两个 ISO 本地时间；不再自动寻找升温段。</p>
+            </li>
+            <li>
+              <span>04 · align</span>
+              <strong>加载模型并对齐</strong>
+              <p>只加载明确选择的 <code>.tpxmodel</code>，再按本次 align 的时钟容差、偏移和越界策略把模型应用到 RGA 行；fit CSV 与 fit record 不参与计算。</p>
+            </li>
+          </ol>
+
+          <div class="temperature-command-grid">
+            <figure class="code-window" aria-labelledby="suggest-command-title">
+              <figcaption class="terminal-bar" id="suggest-command-title">
+                <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                1 · 取得待复核建议
+              </figcaption>
+              <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd temperature suggest experiment.toml
+
+<span class="comment"># 可选：先打开临时审阅图；关闭后才提交 provisional 建议</span>
+<span class="prompt">$</span> tpdtpd temperature suggest experiment.toml --show</code></pre>
+            </figure>
+
+            <figure class="code-window" aria-labelledby="fit-command-title">
+              <figcaption class="terminal-bar" id="fit-command-title">
+                <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+                2 · 用复核边界拟合
+              </figcaption>
+              <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd temperature fit experiment.toml \
+    --heat-start <span class="value">&lt;REVIEWED_START_ISO&gt;</span> \
+    --heat-end <span class="value">&lt;REVIEWED_END_ISO&gt;</span>
+
+<span class="comment"># 默认使用 1 s 时钟容差、monotonic 模型和标准三项工件路径；只在复核后覆盖</span></code></pre>
+            </figure>
+          </div>
+
+          <p class="placeholder-warning">
+            <strong>不要原样复制尖括号。</strong>
+            <code>&lt;REVIEWED_START_ISO&gt;</code> 与 <code>&lt;REVIEWED_END_ISO&gt;</code> 必须替换为本次实验中人工复核的
+            <code>YYYY-MM-DDTHH:MM:SS[.ffffff]</code>；直接 CLI 调用没有隐藏边界默认值。三个输出路径已有按配置位置解析的默认值，默认或覆盖后的目标都必须尚不存在。
+          </p>
+
+          <section class="monotonic-model" id="monotonic-model" aria-labelledby="monotonic-model-title">
+            <header class="monotonic-model-heading">
+              <p class="temperature-eyebrow">DEFAULT MODEL · ISOTONIC REGRESSION</p>
+              <h3 id="monotonic-model-title"><code>monotonic</code>：单调非降保序回归温度拟合</h3>
+              <p>
+                当前默认模型不是多项式、PCHIP 或单调三次样条。它先平滑人工确认升温段的
+                <code>temperature_real</code>，再用相邻违背者合并算法
+                <strong>（Pool-Adjacent-Violators Algorithm，PAVA）</strong>求最小二乘非降序列，
+                最后按时间结点作分段线性重放。
+              </p>
+            </header>
+
+            <div class="monotonic-equation" role="group" aria-label="保序回归的目标函数与非降约束">
+              <div>
+                <span>最小二乘目标</span>
+                <code>min Σᵢ (zᵢ − ỹᵢ)²</code>
+              </div>
+              <div>
+                <span>非降约束</span>
+                <code>z₁ ≤ z₂ ≤ ⋯ ≤ zₙ</code>
+              </div>
+              <p>
+                <code>ỹᵢ</code> 是滚动平滑后的升温段实测温度，<code>zᵢ</code> 是拟合温度。
+                默认平滑窗口为 31 点、估计量为中位数；也可以显式改用均值。
+              </p>
+            </div>
+
+            <ol class="temperature-stage-rail monotonic-flow" aria-label="monotonic 温度模型的四步处理">
+              <li>
+                <span>01 · smooth</span>
+                <strong>先抑制局部测量噪声</strong>
+                <p>在复核后的 ramp 内做居中滚动 median 或 mean；边缘保留现有点，不丢掉端点。</p>
+              </li>
+              <li>
+                <span>02 · PAVA</span>
+                <strong>合并相邻逆序块</strong>
+                <p>若前块温度高于后块，就按各块点数加权平均并继续向左检查，直到所有结点非降。</p>
+              </li>
+              <li>
+                <span>03 · complete model</span>
+                <strong>平台与 ramp 再整体保序</strong>
+                <p>前平台、保序 ramp、后平台拼接后再次运行 PAVA，防止接口产生人为冷却步。</p>
+              </li>
+              <li>
+                <span>04 · replay</span>
+                <strong>按结点线性重放</strong>
+                <p>ramp 内用 <code>np.interp</code> 分段线性插值；升温前后分别使用常值平台。</p>
+              </li>
+            </ol>
+
+            <div class="monotonic-example">
+              <div>
+                <span>PAVA 的一次合并</span>
+                <code>100, 103, 102 °C → 100, 102.5, 102.5 °C</code>
+              </div>
+              <p>
+                因为 <code>103 &gt; 102</code> 违反非降约束，两个等权点合并为
+                <code>(103 + 102) / 2 = 102.5 °C</code>。若新块仍低于左侧块，就继续向左合并；
+                因此下降噪声通常会变成一段平台，而不是被解释成真实降温。
+              </p>
+            </div>
+
+            <aside class="science-note monotonic-boundary">
+              <strong>它保证什么，又不证明什么</strong>
+              <p>
+                <code>monotonic</code> 保证完整拟合输出不下降，但不是“严格递增”，所以允许平台和折点；
+                ramp 内分段线性连续，平台与 ramp 接口只约束不向下，理论上仍可能向上跳变，也不保证一阶导数连续。
+                RMSE 与最大误差比较的是拟合 ramp 和原始实测温度，而不是平滑值。模型不会证明人工选择的
+                <code>heat_start</code>、<code>heat_end</code> 或时钟偏移正确，这些仍由研究者复核。
+              </p>
+            </aside>
+
+            <p class="call-chain monotonic-call-chain">
+              <code>temperature_real</code><span>→</span><code>rolling median / mean</code><span>→</span><code>PAVA</code><span>→</span><code>pre + ramp + post 再保序</code><span>→</span><code>linear replay</code>
+            </p>
+          </section>
+
+          <div class="temperature-report-modes" role="group" aria-label="默认人类报告与显式 JSON 的区别">
+            <div>
+              <span>默认 stdout</span>
+              <strong>给研究者阅读</strong>
+              <p>逐项解释输入、输出、实际参数与结果诊断，供研究者继续复核。</p>
+            </div>
+            <div>
+              <span>命令末尾显式加 <code>--json</code></span>
+              <strong>给机器消费</strong>
+              <p>标准输出改为结构化记录；<code>--json</code> 本身不落盘，若只使用这一模式，调用者需要保存 stdout。三个拟合工件的路径不因此改变。</p>
+            </div>
+          </div>
+
+          <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="temperature fit 同时产生的三类工件">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">工件</th>
+                  <th scope="col">职责</th>
+                  <th scope="col">内容边界</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><code>temperature_fit.csv</code></th>
+                  <td>给研究者逐行复核</td>
+                  <td>比较记录温度、拟合温度与选区；它是审阅表，不是精确模型的替代品。</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>temperature_model.tpxmodel</code></th>
+                  <td>给计算程序精确重载</td>
+                  <td>使用可读 TOML 保存边界、模型类型、系数或插值节点；只放模型本体，不混入来源哈希、诊断或运行记录，也不使用 pickle。默认位于 experiment TOML 同级，canonical <code>records/</code> 目录内的模型会被拒绝。</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>records/temperature_fit_record.json</code></th>
+                  <td>给配对校验与审计</td>
+                  <td>绑定 RGA/温控源、模型和审阅表的相对路径与 SHA256，并保存实际拟合参数、诊断、工具版本和 <code>review_required</code>。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-scroll analysis-decision-table" tabindex="0" role="region" aria-label="temperature fit record、ProcessingRecord 与工作流运行记录的职责区别">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">记录</th>
+                  <th scope="col">回答的问题</th>
+                  <th scope="col">生命周期与消费者</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><code>temperature_fit_record.json</code></th>
+                  <td>这套温度模型由哪些源字节、参数和诊断产生，并与哪张审阅表配对？</td>
+                  <td><code>temperature fit</code> 与三工件一起生成；供拟合审计读取，不是 <code>temperature align</code> 的计算输入。</td>
+                </tr>
+                <tr>
+                  <th scope="row">TOML <code>[[processing_record]]</code></th>
+                  <td>某张正式信号表由什么输入、处理策略和父处理链产生？</td>
+                  <td><code>align</code> 成功写出 <code>aligned.csv</code> 后追加；记录实际 RGA、温控日志、<code>.tpxmodel</code>、信号输入与本次时钟/越界参数形成的 fingerprint。fit record 缺失或变化不使该计算谱系失效。</td>
+                </tr>
+                <tr>
+                  <th scope="row">工作流 <code>receipt.json</code> 与日志</th>
+                  <td>这次进程用什么 argv 启动，如何结束，stdout/stderr 和耗时是什么？</td>
+                  <td>成功、失败或取消的进程都可留下实例运行记录；科学 CLI 不把它当作模型配对清单或正式处理父链。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <aside class="science-note">
+            <strong>模型、哈希与科学接受是三件事</strong>
+            <p>
+              拟合只把研究者确认的温程关系固化为可重放模型。SHA256 一致只说明当前字节与记录相同；退出码为 0、fit record 可验证或 ProcessingRecord 已追加，都不会自动证明升温边界、模型误差、时钟偏移和对齐结果在科学上可接受。研究者仍须检查 CSV、诊断和 <code>aligned.csv</code>，再决定是否进入下一步。
+            </p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="temperature-offset-section shell" id="clock-offset" aria-labelledby="clock-offset-title">
+        <header class="temperature-section-heading">
+          <span>03</span>
+          <div>
+            <h2 id="clock-offset-title">先确认符号，再选择越界规则</h2>
+            <p>offset 是研究者给出的时钟关系；它不是由程序悄悄估计的“最佳值”。</p>
+          </div>
+        </header>
+
+        <div class="offset-lab" data-offset-lab data-offset-state="zero">
+          <div class="offset-controls">
+            <p class="temperature-eyebrow">DIRECTION LAB</p>
+            <h3><code>--time-offset-s</code></h3>
+            <div class="offset-choice" role="group" aria-label="选择教学用温度时钟偏移">
+              <button type="button" data-offset-value="-30" aria-pressed="false">−30 s</button>
+              <button type="button" data-offset-value="0" aria-pressed="true">0</button>
+              <button type="button" data-offset-value="30" aria-pressed="false">+30 s</button>
+            </div>
+            <p>三档只用于理解方向，不是在替实验搜索 offset。</p>
+          </div>
+
+          <div class="offset-clock-board" role="group" aria-label="RGA 时钟固定、温度时钟平移的示意图">
+            <div class="offset-lane offset-lane-rga">
+              <div><strong>RGA datetime</strong><span>固定</span></div>
+              <div class="offset-track"><i class="offset-rga-row"></i><span>同一 RGA 行</span></div>
+            </div>
+            <div class="offset-lane offset-lane-temperature">
+              <div><strong>temperature datetime</strong><span data-offset-clock-label>不移动</span></div>
+              <div class="offset-track"><i class="offset-heat-start"></i><span>effective heat_start</span></div>
+            </div>
+            <div class="offset-axis" aria-hidden="true"><span>earlier</span><span>datetime →</span><span>later</span></div>
+          </div>
+
+          <div class="offset-result" aria-live="polite" aria-atomic="true">
+            <span>当前关系</span>
+            <strong data-offset-summary>0 s · 两条时间轴不平移</strong>
+            <dl>
+              <div><dt>effective heat_start</dt><dd data-effective-delta>不变</dd></div>
+              <div><dt>同一 RGA 行的 program time</dt><dd data-program-delta>不变</dd></div>
+            </dl>
+          </div>
+
+          <noscript>
+            <p class="noscript-note">当前浏览器未运行 JavaScript；默认显示 0 s。稳定回归测试证明：+30 s 会让有效热起点后移 30 s，并让同一 RGA 行的 <code>program_time_min</code> 减少 0.5 min。</p>
+          </noscript>
+        </div>
+
+        <div class="offset-formula">
+          <code>program_time_min = (RGA datetime − effective_heat_start) / 60</code>
+          <p>
+            因此正 offset 把温度时钟与整个拟合模型向后移动。稳定测试逐行合并同一
+            <code>datetime</code>，精确验证 <strong>+30 s → −0.5 min</strong>；这只证明符号实现，不证明 +30 s 适合你的实验。
+          </p>
+        </div>
+
+        <div class="bounds-workbench" data-bounds-workbench data-policy="error">
+          <div class="bounds-heading">
+            <div>
+              <p class="temperature-eyebrow">OUT-OF-BOUNDS IS A SCIENTIFIC CHOICE</p>
+              <h3>RGA 时刻落在温控日志范围外，怎么办？</h3>
+            </div>
+            <p>CLI 默认使用 <code>error</code> 失败关闭；只有在复核后确需其他语义时才显式覆盖。</p>
+          </div>
+
+          <div class="bounds-policy-list" role="group" aria-label="查看四种越界策略">
+            <button type="button" data-bounds-policy="error" aria-pressed="true">
+              <code>error</code><strong>停止</strong><span>不写出误导结果</span>
+            </button>
+            <button type="button" data-bounds-policy="drop" aria-pressed="false">
+              <code>drop</code><strong>删除越界行</strong><span>输出行数减少</span>
+            </button>
+            <button type="button" data-bounds-policy="nan" aria-pressed="false">
+              <code>nan</code><strong>保留行与缺失</strong><span>插值温度为 NaN</span>
+            </button>
+            <button type="button" data-bounds-policy="clip" aria-pressed="false">
+              <code>clip</code><strong>使用最近端点</strong><span>保留行但引入边界假设</span>
+            </button>
+          </div>
+
+          <div class="bounds-result" aria-live="polite" aria-atomic="true">
+            <span data-bounds-label>error · 最保守的首次检查</span>
+            <strong data-bounds-title>发现任一越界 RGA 行就停止</strong>
+            <p data-bounds-copy>不会静默删行、填缺失或延长端点温度；先检查两只时钟、offset 与实际覆盖范围。</p>
+            <code data-bounds-shape>无对齐输出</code>
+          </div>
+        </div>
+      </section>
+
+      <section class="tutorial-step shell temperature-output" id="aligned-output" aria-labelledby="aligned-output-title">
+        <div class="step-marker" aria-hidden="true"><span>04</span></div>
+        <div class="step-content">
+          <header class="step-heading">
+            <span>04</span>
+            <div>
+              <h2 id="aligned-output-title">一行里同时保留测量、插值与模型</h2>
+              <p>默认读取配置中的原始 HAL RGA 时，窄表约为 <code>N_aligned × (7 + K)</code>。</p>
+            </div>
+          </header>
+
+          <div class="output-shape-banner">
+            <strong>N<sub>aligned</sub> × (7 + K)</strong>
+            <p><code>N_aligned</code> 是越界策略处理后的 RGA 行数；<code>K</code> 是保留下来的 AMU 数量。没有测量的通道不会被伪造成 <code>0 A</code>。</p>
+          </div>
+
+          <div class="table-scroll output-schema-scroll" tabindex="0" role="region" aria-label="温度对齐窄表列说明，可横向滚动">
+            <table class="output-schema-table">
+              <caption>默认 raw RGA 对齐输出：7 个复核坐标，加 K 个活动质量电流列</caption>
+              <thead>
+                <tr>
+                  <th scope="col">列</th>
+                  <th scope="col">单位 / 形状</th>
+                  <th scope="col">来自哪里</th>
+                  <th scope="col">怎样理解</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row"><code>row_id</code></th><td>整数 · (N,)</td><td>按输入行建立</td><td>稳定行标识；删行后仍可追溯。</td></tr>
+                <tr><th scope="row"><code>datetime</code></th><td>本地 datetime · (N,)</td><td>RGA metadata + ms</td><td>跨表对齐使用的绝对本地时间。</td></tr>
+                <tr><th scope="row"><code>rga_elapsed_hms</code></th><td>源显示文本 · (N,)</td><td>HAL <code>Time</code></td><td>保留供人核对；不是温控 clock。</td></tr>
+                <tr><th scope="row"><code>acquisition_time_min</code></th><td>min · (N,)</td><td>RGA ms − 首行 ms</td><td>从开始采集起算。</td></tr>
+                <tr><th scope="row"><code>program_time_min</code></th><td>min · (N,)</td><td>datetime − effective heat_start</td><td>从复核热起点起算；可为负值。</td></tr>
+                <tr class="temperature-interp-row"><th scope="row"><code>temperature_interp_c</code></th><td>°C · (N,)</td><td>温控 <code>temperature_real</code></td><td>按 datetime 线性插值到每个 RGA 行；仍受越界策略影响。</td></tr>
+                <tr class="temperature-fit-row"><th scope="row"><code>temperature_fit_c</code></th><td>°C · (N,)</td><td>reviewed fit model</td><td>模型在 program time 上求值；不是原始实测温度。</td></tr>
+                <tr><th scope="row"><code>m{AMU}_signal_a</code> × K</th><td>A · (N, K)</td><td>所选活动质量电流组</td><td>每个真实存在的 AMU 一列；列名写出质量数。</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <aside class="two-temperature-note">
+            <div>
+              <span>实测值经时间插值</span>
+              <strong><code>temperature_interp_c</code></strong>
+              <p>回答“这个 RGA 时刻附近，温控日志记录了什么？”</p>
+            </div>
+            <div>
+              <span>复核模型经 program time 求值</span>
+              <strong><code>temperature_fit_c</code></strong>
+              <p>回答“在已确认模型上，这个温程坐标对应什么温度？”</p>
+            </div>
+          </aside>
+
+          <figure class="code-window align-command" aria-labelledby="align-command-title">
+            <figcaption class="terminal-bar" id="align-command-title">
+              <span class="terminal-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+              3 · 应用已复核模型
+            </figcaption>
+            <pre tabindex="0"><code><span class="prompt">$</span> tpdtpd temperature align experiment.toml
+
+<span class="comment"># 默认：canonical .tpxmodel、1 s 容差、0 s 偏移、越界报错、aligned.csv</span>
+<span class="comment"># 只有在复核后需要改变模型或策略时，才显式传入对应覆盖参数</span></code></pre>
+          </figure>
+
+          <section class="temperature-errors" aria-labelledby="temperature-errors-title">
+            <div>
+              <p class="temperature-eyebrow">COMMON STOP REASONS</p>
+              <h3 id="temperature-errors-title">停止写出，通常是在保护边界</h3>
+            </div>
+            <dl>
+              <div><dt>模型不能安全重载</dt><dd><code>.tpxmodel</code> 后缀、TOML schema、单位、边界或模型字段非法，或者模型位于 canonical <code>records/</code> 目录时都会拒绝 align；重新选择经复核的模型本体。</dd></div>
+              <div><dt>RGA 或温控源不可用</dt><dd>检查 experiment TOML 中的当前路径、表格格式和时间范围；这些当前源字节会进入 alignment fingerprint，而不是与 fit record 进行门禁比较。</dd></div>
+              <div><dt>时间不递增或没有重叠</dt><dd>检查 RGA <code>ms</code>、温控分段、日期跨夜与 offset；不要靠 <code>clip</code> 掩盖无重叠。</dd></div>
+              <div><dt>输出文件已经存在</dt><dd>命令拒绝覆盖；选择新的输出路径，保留旧工件供比较。</dd></div>
+            </dl>
+          </section>
+
+          <section class="temperature-checklist" aria-labelledby="temperature-checklist-title">
+            <div>
+              <p class="temperature-eyebrow">RESEARCHER REVIEW</p>
+              <h3 id="temperature-checklist-title">写出下一阶段输入前，检查七件事</h3>
+            </div>
+            <ol>
+              <li><span>01</span><p><strong>RGA 时间有效</strong>：<code>ms</code> 单调，Date/Time metadata 属于本次采集。</p></li>
+              <li><span>02</span><p><strong>温控分段合理</strong>：暂停、计数器重复与跨午夜没有压缩真实时间。</p></li>
+              <li><span>03</span><p><strong>容差有依据</strong>：记录为何采用本次 <code>clock-elapsed</code> 分段阈值。</p></li>
+              <li><span>04</span><p><strong>边界已复核</strong>：<code>heat_start</code> / <code>heat_end</code> 对应实际物理事件。</p></li>
+              <li><span>05</span><p><strong>offset 符号正确</strong>：正值让温度时钟后移；不要仅凭图形“看起来重合”。</p></li>
+              <li><span>06</span><p><strong>越界策略可解释</strong>：明确是否停、删行、保留缺失或使用端点。</p></li>
+              <li><span>07</span><p><strong>复核与审计分开看</strong>：fit CSV 用于人工检查，fit record 用于核对拟合来源、参数、诊断与输出哈希；它们缺失或变化不改变 <code>.tpxmodel</code> 的 align 计算，但审计不完整仍应明确报告，也不等于科研接受。</p></li>
+            </ol>
+          </section>
+
+          <p class="call-chain temperature-call-chain">
+            <code>tpdtpd temperature align</code><span>→</span><code>_execute_align()</code><span>→</span>
+            <code>align_rga_to_temperature()</code><span>→</span><code>aligned_signal_frame()</code>
+          </p>
+        </div>
+      </section>
+
+      <section class="tutorial-finish temperature-finish" aria-labelledby="temperature-finish-title">
+        <div class="shell">
+          <div>
+            <p class="temperature-eyebrow">NEXT DECISION</p>
+            <h2 id="temperature-finish-title">先审阅对齐窄表，<br>再进入信号处理。</h2>
+            <p>对齐只建立温度坐标；它不会自动扣真空本底、解碎片矩阵或定量。</p>
+          </div>
+          <div class="temperature-finish-actions">
+            <a class="button button-primary" href="commands.html#command-vacuum">下一步：查看或设置真空本底</a>
+            <a class="button button-secondary" href="fragmentation-guide.html">预习碎片矩阵</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="wordmark" href="index.html">tpxtpxtpx</a>
+          <p>Python 3.11+ · version 0.8.0 · 研究者控制每一步</p>
+        </div>
+        <nav aria-label="页脚导航">
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="temperature-alignment.html" aria-current="page">温程对齐</a>
+          <a href="commands.html">命令地图</a>
+          <a href="fragmentation-guide.html">矩阵指南</a>
+          <a href="reference.html">技术参考</a>
+          <a href="evidence.html">运行证据</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

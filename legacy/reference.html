@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="tpxtpxtpx 技术参考中心：从稳定、可核验的边界进入命令地图、Python SDK 与显式科研教程。">
+    <meta name="theme-color" content="#f7f8f4">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="技术参考中心 — tpxtpxtpx">
+    <meta property="og:description" content="无需 GitHub 访问权限，从站内进入稳定命令、SDK、架构与科研流程说明。">
+    <title>技术参考中心 — tpxtpxtpx</title>
+    <link rel="stylesheet" href="site.css">
+  </head>
+  <body class="tutorial-page reference-page reference-index-page">
+    <a class="skip-link" href="#main-content">跳到正文</a>
+
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="wordmark" href="index.html" aria-label="tpxtpxtpx 首页">tpxtpxtpx</a>
+        <nav aria-label="主导航">
+          <a href="index.html">首页</a>
+          <a href="index.html#quickstart">安装验证</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="commands.html">命令地图</a>
+          <a href="evidence.html">运行证据</a>
+          <a href="reference.html" aria-current="page">技术参考</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="reference-hero shell" aria-labelledby="reference-index-title">
+        <p class="reference-eyebrow">SELF-CONTAINED DOCS · tpdtpd 0.8.0</p>
+        <h1 id="reference-index-title">技术参考，<br>留在站内。</h1>
+        <p>CLI、Python SDK、架构和科研数据流不再把原始 Markdown 当作网站页面。这里先说明稳定边界，再把你送到已经过浏览器验证的命令地图与教程。</p>
+        <ul class="reference-meta" aria-label="参考中心状态">
+          <li><span>公开阅读</span><strong>无需仓库权限</strong></li>
+          <li><span>运行证据</span><strong><a href="evidence.html#evidence-levels">按 commit 分级</a></strong></li>
+          <li><span>科研语义</span><strong>研究者控制每一步</strong></li>
+        </ul>
+      </section>
+
+      <section class="reference-catalog shell" aria-labelledby="reference-catalog-title">
+        <header>
+          <p class="reference-eyebrow">CHOOSE A REFERENCE</p>
+          <h2 id="reference-catalog-title">按你正在回答的问题进入。</h2>
+          <p>每个入口只陈述与已推送运行时一致的边界；未稳定的完整参数不会提前进入宣传页面。</p>
+        </header>
+        <div class="reference-card-grid">
+          <article class="reference-card" id="install">
+            <p>01</p>
+            <h2>安装与版本自检</h2>
+            <p>从当前 source checkout 建立隔离环境，区分普通安装与 editable 开发模式，再核对发行包位置、三个入口和公开 SDK；版本号不会替你证明工作树干净。</p>
+            <dl>
+              <div><dt>先记录</dt><dd><code>HEAD + git status</code></dd></div>
+              <div><dt>再验收</dt><dd><code>pip show + CLI + SDK</code></dd></div>
+            </dl>
+            <a class="text-link" href="index.html#quickstart">打开安装自检 <span aria-hidden="true">→</span></a>
+          </article>
+          <article class="reference-card" id="cli">
+            <p>02</p>
+            <h2>CLI 参考边界</h2>
+            <p>当前公开命令地图覆盖 <code>tpdtpd 0.8.0</code> 的 12 个 TPD 顶层入口和 35 个叶命令，并逐项说明目的、输入、输出与人工判断；统一的 <code>integration baseline preview/accept</code> 把主观分析基线保持为独立审核阶段。具体叶参数仍以对应命令的 <code>--help</code> 为准。</p>
+            <dl>
+              <div><dt>先读</dt><dd>命令地图</dd></div>
+              <div><dt>再核验</dt><dd><code>tpdtpd COMMAND ACTION --help</code></dd></div>
+            </dl>
+            <a class="text-link" href="commands.html">打开命令地图 <span aria-hidden="true">→</span></a>
+          </article>
+          <article class="reference-card" id="temperature">
+            <p>03</p>
+            <h2>温程双时钟与对齐</h2>
+            <p>从 RGA <code>Date/Time + ms</code> 与温控 <code>clock + elapsed_s</code> 的独立重建开始，解释人工复核边界、配对拟合工件、offset 符号、越界策略与输出列。</p>
+            <dl>
+              <div><dt>明确顺序</dt><dd><code>suggest → review → fit → align</code></dd></div>
+              <div><dt>核心边界</dt><dd>不自动同步，不把拟合温度写成实测</dd></div>
+            </dl>
+            <a class="text-link" href="temperature-alignment.html">打开温程对齐教程 <span aria-hidden="true">→</span></a>
+          </article>
+          <article class="reference-card" id="coordinate-alignment">
+            <p>04</p>
+            <h2>通用坐标对齐</h2>
+            <p>两张显式坐标表之间只做线性插值：左表决定输出行，右表提供一个或多个数值列；numeric / datetime、越界、无重叠与覆盖行为全部明示。</p>
+            <dl>
+              <div><dt>SDK 默认边界</dt><dd><code>error + require + no-overwrite</code>；numeric / datetime dtype 由调用者显式准备</dd></div>
+              <div><dt>公开入口</dt><dd><code>tpx.alignment.align_by_coordinate()</code> SDK；不再提供顶层 <code>tpdtpd align</code></dd></div>
+            </dl>
+            <a class="text-link" href="coordinate-alignment.html">打开通用对齐教程 <span aria-hidden="true">→</span></a>
+          </article>
+          <article class="reference-card" id="sdk">
+            <p>05</p>
+            <h2>Python SDK 边界</h2>
+            <p>公开入门页沿 <code>DataFrame → Curve → Result</code> 解释形状、单位与错误边界；科学函数从 <code>tpx</code> 导入，CLI 只负责参数、文件与报告适配。</p>
+            <dl>
+              <div><dt>输入形状</dt><dd><code>(N, M)</code> 表格与 <code>(N,)</code> 曲线</dd></div>
+              <div><dt>人工决定</dt><dd>列、区间、基线与峰参数</dd></div>
+            </dl>
+            <a class="text-link" href="sdk-quickstart.html">打开 SDK 入门 <span aria-hidden="true">→</span></a>
+          </article>
+          <article class="reference-card" id="architecture">
+            <p>06</p>
+            <h2>架构与模块边界</h2>
+            <p><code>tpx</code> 保存可组合的科学函数；<code>tpdtpd</code> 解析命令、适配路径、调用 SDK 并输出报告。默认终端输出面向人读，机器调用必须显式请求 <code>--json</code> stdout。</p>
+            <dl>
+              <div><dt>依赖方向</dt><dd>CLI → SDK</dd></div>
+              <div><dt>不提供</dt><dd>自动 Pipeline / Recipe / DAG</dd></div>
+            </dl>
+            <a class="text-link" href="index.html#scope-title">查看项目范围 <span aria-hidden="true">→</span></a>
+          </article>
+          <article class="reference-card" id="workflow">
+            <p>07</p>
+            <h2>显式科研流程</h2>
+            <p>研究者逐步选择输入、参数和新输出：校准支路处理 raw/full acquisition；脱附支路先完成 vacuum 与 fragmentation，随后才可选进入 response_zeroing、定量与曲线分析。</p>
+            <dl>
+              <div><dt>第一步</dt><dd><code>init → config inspect</code>；需要特定实测通道时重复指定 <code>--require-mass</code></dd></div>
+              <div><dt>中段门禁</dt><dd><code>raw: vacuum → fragmentation → calibration</code><br><code>aligned: vacuum → fragmentation → [response_zeroing apply] → quantify relative → composition → flow → rate</code><br>apply 没有 target，一次应用当前输入对应的全部匹配零点</dd></div>
+              <div><dt>四类基线</dt><dd><code>vacuum</code>：fragmentation 前逐 AMU 真空电流；calibration background：只用于标气平台增量；<code>response_zeroing</code>：fragmentation 后从每样品/每物种的稳定无峰窗口扣常数；integration baseline：定量后定义面积参考线。不同样品不共享零偏或基线数值</dd></div>
+              <div><dt>分析边界</dt><dd><code>integration baseline preview → 人工审核 → accept</code>；<code>peaks/areas</code> 从同一 normalized 表和 reviewed 定义复算。科学状态/摘要写入 experiment TOML，逐点证据默认进入 <code>records/*.json</code>，不生成基线、峰或积分 CSV</dd></div>
+            </dl>
+            <div class="reference-card-actions">
+              <a class="text-link" href="first-experiment.html">第一次使用 <span aria-hidden="true">→</span></a>
+              <a class="text-link" href="temperature-alignment.html">温程对齐 <span aria-hidden="true">→</span></a>
+              <a class="text-link" href="co-tpd-2wxq-example.html">完整案例 <span aria-hidden="true">→</span></a>
+              <a class="text-link" href="commands.html#process">处理中段 <span aria-hidden="true">→</span></a>
+            </div>
+          </article>
+          <article class="reference-card" id="fragmentation">
+            <p>08</p>
+            <h2>碎片矩阵怎么读</h2>
+            <p>从 <code>observed = matrix @ species</code> 出发，交互查看行列方向、<code>(N, K)</code> 数据形状、缺失通道的主子矩阵假设与求解后的人工复核点。</p>
+            <dl>
+              <div><dt>默认策略</dt><dd>缺失观测严格报错</dd></div>
+              <div><dt>显式降维</dt><dd>删除配对行列，不补 <code>0 A</code></dd></div>
+            </dl>
+            <a class="text-link" href="fragmentation-guide.html">打开矩阵指南 <span aria-hidden="true">→</span></a>
+          </article>
+          <article class="reference-card" id="2wxq-case">
+            <p>09</p>
+            <h2>#2WXQ CLI 与人工表格实战</h2>
+            <p>历史 0.6 证据页：对照旧 CLI 工件和 XLSX 列/公式。其 AMU 域 <code>preheat</code> 命令已退役，不是现行工作流指令。</p>
+            <dl>
+              <div><dt>积分对照</dt><dd><code>0.850942010</code> vs <code>0.850942073 µmol</code></dd></div>
+              <div><dt>数值差异</dt><dd><code>0.0738 ppm</code>；峰温一致</dd></div>
+            </dl>
+            <a class="text-link" href="co-tpd-2wxq-example.html">打开真实数据对照 <span aria-hidden="true">→</span></a>
+          </article>
+          <article class="reference-card" id="preheat-audit">
+            <p>10</p>
+            <h2>历史 Preheat 窗口与扣除值审计</h2>
+            <p>用 #2/#3 的实际选区和处理链说明：CLI 不会自动消除科研选择，人工表格也不天然有误；比较前应对齐窗口、点数、层级和统计量。</p>
+            <dl>
+              <div><dt>#2</dt><dd>同 64 点、同 <code>median</code>，总扣除均为 <code>126.615 pA</code></dd></div>
+              <div><dt>#3</dt><dd>51 点 raw <code>mean</code> 与 64 点 CLI 结果统一到 raw 等效总扣除后相差 <code>0.2615686 pA</code></dd></div>
+            </dl>
+            <a class="text-link" href="preheat-window-selection-example.html">打开图文方法审计 <span aria-hidden="true">→</span></a>
+          </article>
+        </div>
+      </section>
+
+      <section class="reference-access shell" aria-labelledby="reference-access-title">
+        <div>
+          <p class="reference-eyebrow">EVIDENCE BOUNDARY</p>
+          <h2 id="reference-access-title">站内导航与运行证据，职责分开。</h2>
+        </div>
+        <p>本页负责把读者送到稳定教程；接口版本、命令输出、测试与真实文件边界统一由<a href="evidence.html#evidence-levels">运行证据页</a>记录。GitHub 可见性不作为行为证据，本机未提交开发内容也不会提前写成公开能力。</p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-grid">
+        <div>
+          <a class="wordmark" href="index.html">tpxtpxtpx</a>
+          <p>Python 3.11+ · version 0.8.0 · <a href="evidence.html#evidence-levels">查看历史运行证据</a></p>
+        </div>
+        <nav aria-label="页脚导航">
+          <a href="reference.html" aria-current="page">技术参考</a>
+          <a href="index.html#quickstart">安装验证</a>
+          <a href="evidence.html">运行证据</a>
+          <a href="analysis-workflow.html">曲线分析</a>
+          <a href="co-tpd-2wxq-example.html">#2WXQ 实战</a>
+          <a href="preheat-window-selection-example.html">Preheat 审计</a>
+          <a href="temperature-alignment.html">温程对齐</a>
+          <a href="coordinate-alignment.html">通用对齐</a>
+          <a href="fragmentation-guide.html">矩阵指南</a>
+          <a href="commands.html">命令地图</a>
+          <a href="first-experiment.html">第一次使用</a>
+          <a href="sdk-quickstart.html">SDK 入门</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>
