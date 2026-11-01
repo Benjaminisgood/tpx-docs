@@ -23,10 +23,16 @@
 
 ## 验证
 
-工作台后端回归覆盖授权、撤销、重启、跨 scope、双客户端、schema 升级、原有应用/布局/Agent 行为。前端覆盖工作设置、逐次批准、HTML nonce/scope/注册验证、主题/语言切换、原有工作台和多语言资源。生产构建执行 TypeScript 与 Vite 检查。- P1 后端：`tests/test_workbench_permissions.py tests/test_workbench_interactions.py tests/test_workbench_layout.py tests/test_workbench_agent.py tests/test_workbench_apps.py` 共 63 项通过。
+工作台后端回归覆盖授权、撤销、重启、跨 scope、双客户端、schema 升级、原有应用/布局/Agent 行为。前端覆盖工作设置、逐次批准、HTML nonce/scope/注册验证、主题/语言切换、原有工作台和多语言资源。生产构建执行 TypeScript 与 Vite 检查。
+
+- P1 后端：`tests/test_workbench_permissions.py tests/test_workbench_interactions.py tests/test_workbench_layout.py tests/test_workbench_agent.py tests/test_workbench_apps.py` 共 63 项通过。
 - P2/P3 后端：`tests/test_storage_service.py tests/test_tpx_storage_routes.py tests/science/test_workflow_dataflow.py` 共 57 项通过。
 - 前端合并回归：Work 设置、审批、HTML 桥接、工作台、i18n、存储、科学工作流和目标目录选择器共 8 个测试文件、79 项通过。
 - Ruff、TypeScript no-emit 检查与 Vite 生产构建通过。
 - 原有 `tests/science/test_workflow_service.py -k chain` 的完整冻结计划科学链通过（1 项，13 项未选择）。首轮在 Matplotlib 首次生成字体缓存时超过单步 30 秒等待；随后通过临时 pytest fixture 在测试计时前初始化同一临时目录的字体缓存。原测试、30 秒单步超时和全部科学/来源断言未修改，通过用时 63.95 秒。字体预热不改变科学参数或结果。
 
 这些测试留在 TPX 仓库，作为后续对齐的合同保护，不读取 TAP 工作区或跨仓运行配置。真实 NAS/OSS 服务器与真实实验没有在本轮操作。
+
+## 并发复查修复
+
+工作台状态事件和布局事件在等待 scope 检查时，活动对话可能已经结束或换成新的队列。事件现在捕获原队列身份，在 await 后复核并直接写入同一个仍在活动的队列，不经过可能创建模型任务的通用入队方法。新增 4 项回归覆盖两类事件在等待期间队列消失或被替换，确保不会启动或进入另一轮对话。
